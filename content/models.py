@@ -10,3 +10,4 @@ class restaurant_info(models.Model):
     y = models.FloatField()
     address = models.CharField(max_length=100)
     url = models.CharField(max_length=100)
+    type = models.CharField(max_length=30, default='')
