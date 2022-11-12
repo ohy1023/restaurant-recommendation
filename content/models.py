@@ -4,7 +4,7 @@ from django.db import models
 
 
 class restaurant_info(models.Model):
-    id = models.BigAutoField
+    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     x = models.FloatField()
     y = models.FloatField()
