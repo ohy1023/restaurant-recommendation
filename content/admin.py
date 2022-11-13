@@ -13,6 +13,7 @@ class restaurantAdmin(admin.ModelAdmin):
         'y',
         'address',
         'url',
+        'type',
     )
 
     list_display_links = (
@@ -22,6 +23,7 @@ class restaurantAdmin(admin.ModelAdmin):
         'y',
         'address',
         'url',
+        'type',
     )
 
     search_fields = [
@@ -31,4 +33,5 @@ class restaurantAdmin(admin.ModelAdmin):
         'y',
         'address',
         'url',
+        'type',
     ]
