@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django.test import TestCase
 
 from .models import restaurant_review, restaurant_info
@@ -32,9 +33,15 @@ class YourTestClass(TestCase):
         self.assertEquals(query.review,'사장님은 예쁜데 싸가지가 존나 없어요.')
 
     def test_select_join(self):
-        query_set = restaurant_review.objects.filter(restaurant_id=1).prefetch_related('restaurant_id__restaurant_review_set')
+        query_set = restaurant_review.objects.filter(restaurant_id=1,restaurant_id__id=1).select_related('restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
 
         result = [{
+            "restaurant_id": review.restaurant_id.id,
+            "name":review.restaurant_id.name,
+            "x":review.restaurant_id.x,
+            "y": review.restaurant_id.y,
+            "address": review.restaurant_id.address,
+            "url": review.restaurant_id.url,
             "id":review.id,
             "score":review.score,
             "review":review.review
