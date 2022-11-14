@@ -1,7 +1,7 @@
 from django.http import JsonResponse  # 카카오톡과 연동하기 위해선 JsonResponse로 출력
 from django.views.decorators.csrf import csrf_exempt
-
-from .models import restaurant_info, restaurant_review
+from .models import restaurant_review
+import osmnx as ox, networkx as nx, geopandas as gpd, matplotlib.pyplot as plt
 
 
 # JsonResponse 출력 테스트용
@@ -17,16 +17,16 @@ def viewList(request):
         'restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
 
     result = [{
-        "restaurant_id": review.restaurant_id.id,
-        "name": review.restaurant_id.name,
-        "x": review.restaurant_id.x,
-        "y": review.restaurant_id.y,
-        "address": review.restaurant_id.address,
-        "url": review.restaurant_id.url,
-        "id": review.id,
-        "score": review.score,
-        "review": review.review
-    } for review in querySet]
+        "restaurant_id": data.restaurant_id.id,
+        "name": data.restaurant_id.name,
+        "x": data.restaurant_id.x,
+        "y": data.restaurant_id.y,
+        "address": data.restaurant_id.address,
+        "url": data.restaurant_id.url,
+        "id": data.id,
+        "score": data.score,
+        "review": data.review
+    } for data in querySet]
     return JsonResponse({
         'message': result,
         'keyboard': {
@@ -34,14 +34,3 @@ def viewList(request):
         }
     }, json_dumps_params={'ensure_ascii': False}, status=200)
 
-# else:
-# return JsonResponse({
-#
-#     'message': {
-#         'text': '잘못된 입력입니다.'
-#     },
-#     'keyboard': {
-#         'type': 'text',
-#     }
-#
-# }, json_dumps_params={'ensure_ascii': False}, status=200)
