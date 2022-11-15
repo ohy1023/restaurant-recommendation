@@ -16,29 +16,6 @@ def keyboard(request):
 
 
 @csrf_exempt
-def viewList(request):
-    # 피자 파는 식당의 정보 및 리뷰 조인 후 데이터 조회
-    querySet = restaurant_review.objects.filter(restaurant_id__type__contains='치킨').select_related('restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
-
-    result = [{
-        "restaurant_id": data.restaurant_id.id,
-        "name": data.restaurant_id.name,
-        "x": data.restaurant_id.x,
-        "y": data.restaurant_id.y,
-        "address": data.restaurant_id.address,
-        "url": data.restaurant_id.url,
-        "id": data.id,
-        "score": data.score,
-        "review": data.review
-    } for data in querySet]
-    return JsonResponse({
-        'message': result,
-        'keyboard': {
-            'type': 'text',
-        }
-    }, json_dumps_params={'ensure_ascii': False}, status=200)
-
-@csrf_exempt
 def findNearRestaurant(request):
     # 요청 받아야하는 값 : 피자
     querySet = restaurant_info.objects.filter(type__contains='피자').all().values()
@@ -130,9 +107,25 @@ def findNearRestaurant(request):
     user_loc['2순위 차이'] = df3_rank2_diff
     print(user_loc)
 
+    querySet2 = restaurant_review.objects.filter(restaurant_id=user_loc['1순위'][0]).select_related(
+        'restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
+
+    result = [{
+        "restaurant_id": data.restaurant_id.id,
+        "name": data.restaurant_id.name,
+        "x": data.restaurant_id.x,
+        "y": data.restaurant_id.y,
+        "address": data.restaurant_id.address,
+        "url": data.restaurant_id.url,
+        "id": data.id,
+        "score": data.score,
+        "review": data.review
+    } for data in querySet2]
     return JsonResponse({
-        'message': user_loc['1순위'][0],
+        'message': result,
         'keyboard': {
             'type': 'text',
         }
     }, json_dumps_params={'ensure_ascii': False}, status=200)
+
+
