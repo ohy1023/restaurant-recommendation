@@ -51,6 +51,7 @@ def findNearRestaurant(request):
 
     df2 = pd.DataFrame({'pk': pk, 'X': X, 'Y': Y})
 
+    # 신촌역 좌표
     point = 37.5598, 126.9425
     G = ox.graph_from_point(point, network_type='bike', dist=500)
     Gs = ox.utils_graph.get_largest_component(G, strongly=True)
