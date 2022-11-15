@@ -18,7 +18,7 @@ def keyboard(request):
 @csrf_exempt
 def viewList(request):
     # 피자 파는 식당의 정보 및 리뷰 조인 후 데이터 조회
-    querySet = restaurant_info.objects.filter(type__contains="피자")
+    querySet = restaurant_review.objects.filter(restaurant_id__type__contains='치킨').select_related('restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
 
     result = [{
         "restaurant_id": data.restaurant_id.id,
