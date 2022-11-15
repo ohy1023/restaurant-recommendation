@@ -85,7 +85,11 @@ class OsmnxTestClass(TestCase):
 
         result = requests.post(url, data)
 
-        print(result.text)
+        lat = result.json()['location']['lat']
+        lng = result.json()['location']['lng']
+
+        print(lat)
+        print(lng)
 
     def test_findNearRestaurant(self):
         point = 37.5598, 126.9425

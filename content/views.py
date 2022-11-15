@@ -1,8 +1,10 @@
 import numpy as np
 from django.http import JsonResponse  # 카카오톡과 연동하기 위해선 JsonResponse로 출력
 from django.views.decorators.csrf import csrf_exempt
-from .models import restaurant_review, restaurant_info
 
+import my_settings
+from .models import restaurant_review, restaurant_info
+import requests
 from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import pandas as pd
@@ -15,9 +17,26 @@ def keyboard(request):
     })
 
 
+# 현재 위치 좌표로 가져오기
+def get_my_place_google():
+    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={my_settings.GOOGLE_API_KEY}'
+    data = {
+        'considerIp': True,
+    }
+
+    result = requests.post(url, data)
+
+    lat = result.json()['location']['lat']
+    lng = result.json()['location']['lng']
+
+    return lat, lng
+
+
+# 핵심 로직
 @csrf_exempt
 def findNearRestaurant(request):
-    # 요청 받아야하는 값 : 피자
+    # 요청 받아야하는 값 : ex)피자
+    # 추후 카카오톡 obt도면 수정 예정
     querySet = restaurant_info.objects.filter(type__contains='피자').values()
 
     querySet = list(querySet)
@@ -27,17 +46,16 @@ def findNearRestaurant(request):
     Y = [k['y'] for k in querySet]
 
     df2 = pd.DataFrame({'pk': pk, 'X': X, 'Y': Y})
+    df2.reset_index(drop=True, inplace=True)
 
     # 신촌역 좌표
     point = 37.5598, 126.9425
-    G = ox.graph_from_point(point, network_type='bike', dist=500)
+    G = ox.graph_from_point(point, network_type='bike', dist=1500)
     Gs = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # 요청 받아야하는 값 : 사용자 위치
-    user_x = 37.5085162
-    user_y = 126.8843116
+    user_x, user_y = get_my_place_google()
 
-    df2.reset_index(drop=True, inplace=True)
     road_li = []  # 도로 기준 최단 거리
 
     for i in tqdm(range(len(df2))):
@@ -48,9 +66,6 @@ def findNearRestaurant(request):
             dest_node = ox.nearest_nodes(Gs, X=df2['X'][i], Y=df2['Y'][i])  # 목적지
             len_road = nx.shortest_path_length(Gs, orig_node, dest_node, weight='length')
             road_li.append(str(round(len_road, 1)) + 'm')
-
-    # road_li3 = pd.DataFrame(road_li)
-    # road_li3 = ['최단거리', '최단시간']
 
     t = []  # 최단거리 bike 기준 시간
     bike_sp = 3000  # 사람 속도 3km/h
@@ -78,7 +93,6 @@ def findNearRestaurant(request):
     df_diff = pd.DataFrame()
     stores = []
     diff = []
-    # df_3 = pd.DataFrame()
     df3_rank1_stores = []
     df3_rank1_diff = []
     df3_rank2_stores = []
