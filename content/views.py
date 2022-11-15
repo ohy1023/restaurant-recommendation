@@ -1,9 +1,9 @@
 import numpy as np
 from django.http import JsonResponse  # 카카오톡과 연동하기 위해선 JsonResponse로 출력
 from django.views.decorators.csrf import csrf_exempt
-from .models import restaurant_review,restaurant_info
+from .models import restaurant_review, restaurant_info
 
-import my_settings
+from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import pandas as pd
 
@@ -19,7 +19,6 @@ def keyboard(request):
 def viewList(request):
     # 피자 파는 식당의 정보 및 리뷰 조인 후 데이터 조회
     querySet = restaurant_info.objects.filter(type__contains="피자")
-
 
     result = [{
         "restaurant_id": data.restaurant_id.id,
@@ -39,7 +38,7 @@ def viewList(request):
         }
     }, json_dumps_params={'ensure_ascii': False}, status=200)
 
-
+@csrf_exempt
 def findNearRestaurant(request):
     # 요청 받아야하는 값 : 피자
     querySet = restaurant_info.objects.filter(type__contains='피자').all().values()
@@ -51,23 +50,15 @@ def findNearRestaurant(request):
     Y = [k['y'] for k in querySet]
 
     df2 = pd.DataFrame({'pk': pk, 'X': X, 'Y': Y})
-    print(df2)
 
-
-    place = '서대문구, 서울, 대한민국'
-    G = ox.graph_from_place(place, network_type='bike', simplify=False)
+    point = 37.5598, 126.9425
+    G = ox.graph_from_point(point, network_type='bike', dist=500)
     Gs = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # 요청 받아야하는 값 : 사용자 위치
     user_x = 37.5085162
     user_y = 126.8843116
 
-    # ORM으로 조회한 것을 데이터프레임하여 대체해야함
-    # df2 = pd.read_csv('신촌 음식점.csv', encoding='utf8', index_col=0)
-
-    from tqdm import tqdm
-
-    # df2 = df[0:10000]
     df2.reset_index(drop=True, inplace=True)
     road_li = []  # 도로 기준 최단 거리
 
@@ -80,8 +71,8 @@ def findNearRestaurant(request):
             len_road = nx.shortest_path_length(Gs, orig_node, dest_node, weight='length')
             road_li.append(str(round(len_road, 1)) + 'm')
 
-    road_li3 = pd.DataFrame(road_li)
-    road_li3 = ['최단거리', '최단시간']
+    # road_li3 = pd.DataFrame(road_li)
+    # road_li3 = ['최단거리', '최단시간']
 
     t = []  # 최단거리 bike 기준 시간
     bike_sp = 15000  # 자전거 속도 15km/h
@@ -109,7 +100,7 @@ def findNearRestaurant(request):
     df_diff = pd.DataFrame()
     stores = []
     diff = []
-    df_3 = pd.DataFrame()
+    # df_3 = pd.DataFrame()
     df3_rank1_stores = []
     df3_rank1_diff = []
     df3_rank2_stores = []

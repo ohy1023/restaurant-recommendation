@@ -88,8 +88,8 @@ class OsmnxTestClass(TestCase):
         print(result.text)
 
     def test_findNearRestaurant(self):
-        place = '서대문구, 서울, 대한민국'
-        G = ox.graph_from_place(place, network_type='bike', simplify=False)
+        point = 37.5598, 126.9425
+        G = ox.graph_from_point(point, network_type='bike', dist=500)
         Gs = ox.utils_graph.get_largest_component(G, strongly=True)
 
         user_x = 37.5085162
