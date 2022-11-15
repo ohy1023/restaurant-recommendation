@@ -18,7 +18,7 @@ def keyboard(request):
 @csrf_exempt
 def findNearRestaurant(request):
     # 요청 받아야하는 값 : 피자
-    querySet = restaurant_info.objects.filter(type__contains='피자').all().values()
+    querySet = restaurant_info.objects.filter(type__contains='피자').values()
 
     querySet = list(querySet)
 
@@ -53,7 +53,7 @@ def findNearRestaurant(request):
     # road_li3 = ['최단거리', '최단시간']
 
     t = []  # 최단거리 bike 기준 시간
-    bike_sp = 15000  # 자전거 속도 15km/h
+    bike_sp = 3000  # 사람 속도 3km/h
     road_li = pd.DataFrame(road_li)
 
     road_li.columns = ['최단거리']
