@@ -18,6 +18,9 @@ class DBAndModelTestClass(TestCase):
         restaurant_info.objects.create(id=2, name='은행골 본점신관', x=124.34, y=36.64,
                                        address='서울 관악구 조원로 10-1', url='https://place.map.kakao.com/16622909',
                                        type='초밥')
+        restaurant_info.objects.create(id=3, name='은행골 본점신관', x=124.34, y=36.64,
+                                       address='서울 관악구 조원로 10-1', url='https://place.map.kakao.com/16622909',
+                                       type='닭갈비')
         restaurant_review.objects.create(id=1, score=3, review='사장님은 예쁜데 싸가지가 존나 없어요.',
                                          restaurant_id=restaurant_info.objects.get(id=1))
         restaurant_review.objects.create(id=2, score=4, review='진짜 개맛있음요.',
@@ -36,8 +39,7 @@ class DBAndModelTestClass(TestCase):
         self.assertEquals(query.review,'개노맛.')
 
     def test_select_join(self):
-        query_set = restaurant_review.objects.filter(restaurant_id=1,restaurant_id__id=1).select_related('restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
-
+        query_set = restaurant_review.objects.filter(restaurant_id__type__contains='닭갈비').select_related('restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
         result = [{
             "restaurant_id": review.restaurant_id.id,
             "name":review.restaurant_id.name,
@@ -49,7 +51,20 @@ class DBAndModelTestClass(TestCase):
             "score":review.score,
             "review":review.review
         }for review in query_set]
+        print(result)
         self.assertEquals(len(result),2)
+
+    def test_type_df(self):
+        querySet = restaurant_info.objects.filter(type__contains='닭갈비').all()[:2].values()
+
+        querySet = list(querySet)
+
+        id = [i['id'] for i in querySet]
+        X = [j['x'] for j in querySet]
+        Y = [k['y'] for k in querySet]
+
+        df = pd.DataFrame({'id': id, 'X': X, 'Y': Y})
+        print(df)
 
 class OsmnxTestClass(TestCase):
 
