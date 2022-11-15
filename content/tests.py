@@ -65,6 +65,12 @@ class DBAndModelTestClass(TestCase):
 
         df = pd.DataFrame({'id': id, 'X': X, 'Y': Y})
         print(df)
+        print(type(df['X'][0]))
+
+        df2 = pd.read_csv('신촌 음식점.csv', encoding='utf8', index_col=0)
+        print(df2)
+        print(type(df2['X'][0]))
+        # print(type(df2[0]['X']))
 
 class OsmnxTestClass(TestCase):
 
