@@ -5,5 +5,6 @@ from . import views
 urlpatterns = [
     path('keyboard/',views.keyboard),
     path('type/',views.viewList),
+    path('store/',views.findNearRestaurant),
 
 ]
