@@ -127,5 +127,3 @@ def findNearRestaurant(request):
             'type': 'text',
         }
     }, json_dumps_params={'ensure_ascii': False}, status=200)
-
-
