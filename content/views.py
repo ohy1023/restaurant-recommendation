@@ -72,6 +72,7 @@ def findNearRestaurant(request):
 
     df2 = df2.sort_values(by='minDist', axis=0, ascending=True)
 
+    # 추후 최적화 가능해 보임
     temp = list()
 
     for i in list(df2['pk'][:10]):
@@ -105,15 +106,7 @@ def findNearRestaurant(request):
 
 
     return JsonResponse({
-        'message': {
-            "restaurant_id": data.id,
-            "name": data.name,
-            "x": data.x,
-            "y": data.y,
-            "address": data.address,
-            "url": data.url,
-            'reviews': reviews
-        },
+        'info' : temp,
         'keyboard': {
             'type': 'text',
         }

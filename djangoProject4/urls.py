@@ -15,9 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
+from django.conf.urls import url
+from content import views
 
 
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('response/',include('content.urls')),
+# ]
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('response/',include('content.urls')),
+  url(r'^keyboard/?$', views.keyboard),
+  url(r'^message', views.findNearRestaurant)
+
 ]
