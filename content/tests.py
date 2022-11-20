@@ -8,89 +8,14 @@ from .models import restaurant_review, restaurant_info
 import my_settings
 import osmnx as ox, networkx as nx
 import pandas as pd
-
-# 자연어 분석 처리 긍정/부정 비율
-# 기본
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# 경고 뜨지 않게 설정
-import warnings
+from tqdm import tqdm
 
 import re
 # 한국어 형태소 분석
-from konlpy.tag import Okt, Hannanum, Kkma, Mecab, Komoran
+from konlpy.tag import Okt
 
 
-def text_clearing(text):
-    hangul = re.compile('[^ ㄱ-ㅣ가-힣]+')
-    # 지정한 정규식에 해당하지 않은 것은 길이가 0인 문자열로 변환한다.
-    result = hangul.sub('', text)
-    return result
 
-# konlpy 라이브러리로 텍스트 데이터에서 형태소를 추출한다.
-def get_pos(x):
-    tagger = Okt()
-    pos = tagger.pos(x)
-
-    # 단어와 품사를 합쳐서 하나의 단어로 만들어준다.
-    result = []
-
-    # 형태소의 수만큼 반복한다.
-    # 조사인 것과 명사인 것이 같을 수 있기 때문에 구분해준다.
-    # 형태소 벡터를 만들때 추후 사용
-    for a1 in pos:
-        result.append(f'{a1[0]}/{a1[1]}')
-
-    return result
-
-
-def bad_feature_sep(bottom50, text_data_dict):
-    bad_feature = []
-    bad_feature_temp = []
-
-    for value, idx in bottom50:
-        bad_feature.append(text_data_dict[idx])
-
-    for i in bad_feature:
-        st_li = i.split('/')
-        bad_feature_temp.append(st_li[0])
-
-    return bad_feature_temp
-
-
-def get_bad_feature_keywords(bad_feature_temp, review):
-    feature_temp = []
-    for i in bad_feature_temp:
-        for j in review:
-            if i in j:
-                feature_temp.append(i)
-
-    return feature_temp
-
-
-def good_feature_sep(top50, text_data_dict):
-    good_feature = []
-    good_feature_temp = []
-
-    for value, idx in top50:
-        good_feature.append(text_data_dict[idx])
-
-    for i in good_feature:
-        st_li = i.split('/')
-        good_feature_temp.append(st_li[0])
-
-    return good_feature_temp
-
-
-def get_good_feature_keywords(good_feature_temp, review):
-    feature_temp = []
-    for i in good_feature_temp:
-        for j in review:
-            if i in j:
-                feature_temp.append(i)
-
-    return feature_temp
 
 
 # Create your tests here.
@@ -127,6 +52,10 @@ class DBAndModelTestClass(TestCase):
     def test_select_join(self):
         query_set = restaurant_review.objects.filter(restaurant_id__type__contains='닭갈비').select_related(
             'restaurant_id').prefetch_related('restaurant_id__restaurant_review_set')
+
+        # querySet2 = restaurant_review.objects.filter(restaurant_id=438979).select_related('restaurant_id')\
+        #     .prefetch_related('restaurant_id__restaurant_review_set')
+
         result = [{
             "restaurant_id": review.restaurant_id.id,
             "name": review.restaurant_id.name,
@@ -206,6 +135,76 @@ class OsmnxTestClass(TestCase):
 
         print(df2.info())
 
+def text_clearing(text):
+    hangul = re.compile('[^ ㄱ-ㅣ가-힣]+')
+    # 지정한 정규식에 해당하지 않은 것은 길이가 0인 문자열로 변환한다.
+    result = hangul.sub('', text)
+    return result
+
+# konlpy 라이브러리로 텍스트 데이터에서 형태소를 추출한다.
+def get_pos(x):
+    tagger = Okt()
+    pos = tagger.pos(x)
+
+    # 단어와 품사를 합쳐서 하나의 단어로 만들어준다.
+    result = []
+
+    # 형태소의 수만큼 반복한다.
+    # 조사인 것과 명사인 것이 같을 수 있기 때문에 구분해준다.
+    # 형태소 벡터를 만들때 추후 사용
+    for a1 in pos:
+        result.append(f'{a1[0]}/{a1[1]}')
+
+    return result
+
+
+def bad_feature_sep(bottom50, text_data_dict):
+    bad_feature = []
+    bad_feature_temp = []
+
+    for value, idx in bottom50:
+        bad_feature.append(text_data_dict[idx])
+
+    for i in bad_feature:
+        st_li = i.split('/')
+        bad_feature_temp.append(st_li[0])
+
+    return bad_feature_temp
+
+
+def get_bad_feature_keywords(bad_feature_temp, review):
+    feature_temp = []
+    for i in bad_feature_temp:
+        for j in review:
+            if i in j:
+                feature_temp.append(i)
+
+    return feature_temp
+
+
+def good_feature_sep(top50, text_data_dict):
+    good_feature = []
+    good_feature_temp = []
+
+    for value, idx in top50:
+        good_feature.append(text_data_dict[idx])
+        print(good_feature_temp)
+
+    for i in good_feature:
+        st_li = i.split('/')
+        good_feature_temp.append(st_li[0])
+    print(good_feature_temp)
+    return good_feature_temp
+
+
+def get_good_feature_keywords(good_feature_temp, review):
+    feature_temp = []
+    for i in good_feature_temp:
+        for j in review:
+            if i in j:
+                feature_temp.append(i)
+
+    return feature_temp
 
 class scoreTestClass(TestCase):
 
@@ -248,8 +247,7 @@ class scoreTestClass(TestCase):
 
         total_food = total_food.astype({'score': 'int'})
         total_food.reset_index(drop=True, inplace=True)
-        total_food['score'] >= 4
-        from tqdm import tqdm
+
 
         for i in tqdm(range(len(total_food))):
             if total_food['score'][i] >= 4:
@@ -312,8 +310,6 @@ class scoreTestClass(TestCase):
 
             # 위의 딕셔너리에 담는다.
             text_data_dict[value] = key
-
-        text_data_dict
 
         # 긍정적인 어조 (상관계수가 1에 가장 큰)
         top50 = coef_pos_index[:50]
