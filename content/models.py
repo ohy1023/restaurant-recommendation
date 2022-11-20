@@ -19,3 +19,13 @@ class restaurant_review(models.Model):
     restaurant_id = models.ForeignKey("restaurant_info", on_delete=models.CASCADE)
     score = models.IntegerField()
     review = models.TextField()
+
+
+class good_word(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    word = models.CharField(max_length=10)
+
+
+class bad_word(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    word = models.CharField(max_length=10)
