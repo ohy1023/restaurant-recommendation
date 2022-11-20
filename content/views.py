@@ -1,5 +1,7 @@
 import numpy as np
+import rander as rander
 from django.http import JsonResponse  # 카카오톡과 연동하기 위해선 JsonResponse로 출력
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 import my_settings
@@ -9,13 +11,6 @@ from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import pandas as pd
 import json
-
-
-# JsonResponse 출력 테스트용
-def keyboard(request):
-    return JsonResponse({
-        'type': 'text'
-    })
 
 
 # 현재 위치 좌표로 가져오기
@@ -33,12 +28,16 @@ def get_my_place_google():
     return lat, lng
 
 
+def home(request):
+    return render(request, 'home.html')
+
 # 핵심 로직
 @csrf_exempt
 def findNearRestaurant(request):
+    food_type = request.GET.get('food_field')
     # 요청 받아야하는 값 : ex)피자
     # 추후 카카오톡 obt도면 수정 예정
-    querySet = restaurant_info.objects.filter(type__contains='피자').values()
+    querySet = restaurant_info.objects.filter(type__contains=food_type).values()
 
     querySet = list(querySet)
 
@@ -77,9 +76,6 @@ def findNearRestaurant(request):
 
     for i in list(df2['pk'][:10]):
 
-    # querySet2 = restaurant_review.objects.filter(restaurant_id=438979).select_related('restaurant_id')\
-    #     .prefetch_related('restaurant_id__restaurant_review_set')
-
         querySet2 = restaurant_info.objects.filter(id=i)
 
         querySet3 = restaurant_review.objects.filter(restaurant_id=i).values_list('review', flat=True)
@@ -104,9 +100,8 @@ def findNearRestaurant(request):
         temp.append(test)
     print(temp)
 
-
     return JsonResponse({
-        'info' : temp,
+        'info': temp,
         'keyboard': {
             'type': 'text',
         }
