@@ -3,6 +3,8 @@ import os
 
 import pandas as pd
 
+from django.core.exceptions import ObjectDoesNotExist
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 
 # 2번 실행파일에 Django 환경을 불러오는 작업.
@@ -23,5 +25,11 @@ def read_csv():
 
 if __name__ == '__main__':
     for i in read_csv().index:
-        restaurant_review(restaurant_id=restaurant_info.objects.get(id=read_csv()['restaurant_id'][i]), score=read_csv()['score'][i]
-                          , review=read_csv()['review'][i]).save()
+        try:
+            id = restaurant_info.objects.get(id=read_csv()['restaurant_id'][i])
+            restaurant_review(restaurant_id=id,
+                              score=read_csv()['score'][i]
+                              , review=read_csv()['review'][i]).save()
+        except ObjectDoesNotExist:
+            id = None
+            pass

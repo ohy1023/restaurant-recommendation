@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+
 warnings.filterwarnings('ignore')
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -183,6 +184,7 @@ def review_predict(new_sentence):
         print("{:.2f}% 확률로 긍정 리뷰입니다.\n".format(score * 100))
     else:
         print("{:.2f}% 확률로 부정 리뷰입니다.\n".format((1 - score) * 100))
+
 
 
 # 현재 위치 좌표로 가져오기
@@ -745,34 +747,21 @@ if __name__ == '__main__':
 
         loaded_model = load_model('best_model.h5')
 
+        review_predict('의자도 편하고 다시 방문하고 싶습니다')
+        review_predict('지나가다 눈에 보였서 어쩔수 없이 들어갔는데 괜찮습니다')
+        review_predict('다시는 안가')
+        review_predict('사장님은 예쁜데 싸가지가 존나 없어요')
+        review_predict('김치는 맛있는데 딴거는 별로')
+        review_predict('이게 음식이냐')
+
         st.success("Success")
-
-
-        def sentiment_predict(new_sentence):
-            new_sentence = re.sub(r'[^ㄱ-ㅎㅏ-ㅣ가-힣 ]', '', new_sentence)
-            new_sentence = okt.morphs(new_sentence, stem=True)  # 토큰화
-            new_sentence = [word for word in new_sentence if not word in stopwords]  # 불용어 제거
-            encoded = tokenizer.texts_to_sequences([new_sentence])  # 정수 인코딩
-            pad_new = pad_sequences(encoded, maxlen=max_len)  # 패딩
-            score = float(loaded_model.predict(pad_new))  # 예측
-            if (score > 0.5):
-                print("{:.2f}% 확률로 긍정 리뷰입니다.\n".format(score * 100))
-            else:
-                print("{:.2f}% 확률로 부정 리뷰입니다.\n".format((1 - score) * 100))
-
-
-        sentiment_predict('의자도 편하고 다시 방문하고 싶습니다')
-        sentiment_predict('지나가다 눈에 보였서 어쩔수 없이 들어갔는데 괜찮습니다')
-        sentiment_predict('다시는 안가')
-        sentiment_predict('사장님은 예쁜데 싸가지가 존나 없어요')
-        sentiment_predict('김치는 맛있는데 딴거는 별로')
-        sentiment_predict('이게 음식이냐')
 
     if st.button("최종"):
         st.write("Data Loading..")
         # 데이터 로딩 함수는 여기에!
         food_type = st.text_input("드시고 싶은 음식 종류를 입력해주세요.")
-        food_tpe = st.write(food_type)
+        food_type = str(food_type)
+        print(food_type)
         # 요청 받아야하는 값 : ex)피자
         # 추후 카카오톡 obt도면 수정 예정
         querySet = restaurant_info.objects.filter(Q(name__contains=food_type) | Q(type__contains=food_type)).values()
@@ -860,6 +849,8 @@ if __name__ == '__main__':
 
         store_unique['store'] = unique_li
 
+        store_unique
+
         good_feature_temp = list(good_word.objects.values_list('word', flat=True))
 
         bad_feature_temp = list(bad_word.objects.values_list('word', flat=True))
@@ -886,8 +877,8 @@ if __name__ == '__main__':
         total_list['Review'] = review_li
 
         result = total_list.sort_values('Score', ascending=False)[:3]
-
-        result
+        print(result)
+        st.write(result)
 
         st.success("Success")
 
