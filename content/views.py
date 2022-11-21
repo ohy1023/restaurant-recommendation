@@ -1,4 +1,4 @@
-from django.http import JsonResponse  # 카카오톡과 연동하기 위해선 JsonResponse로 출력
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 import re
@@ -9,8 +9,65 @@ import requests
 from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import pandas as pd
-import json
 from django.db.models import Q
+import streamlit as st
+from collections import OrderedDict
+
+
+def whole_region(keyword, start_x, start_y, end_x, end_y):
+    page_num = 1
+    # 데이터가 담길 리스트
+    all_data_list = []
+
+    while (1):
+        url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
+        params = {'query': keyword, 'page': page_num,
+                  'rect': f'{start_x},{start_y},{end_x},{end_y}'}
+        headers = {"Authorization": my_settings.KAKAO_API_KEY}
+        ## 입력예시 -->> headers = {"Authorization": "KakaoAK f64acbasdfasdfasf70e4f52f737760657"}
+        resp = requests.get(url, params=params, headers=headers)
+
+        search_count = resp.json()['meta']['total_count']
+
+        if search_count > 45:
+            dividing_x = (start_x + end_x) / 2
+            dividing_y = (start_y + end_y) / 2
+            ## 4등분 중 왼쪽 아래
+            all_data_list.extend(whole_region(keyword, start_x, start_y, dividing_x, dividing_y))
+            ## 4등분 중 오른쪽 아래
+            all_data_list.extend(whole_region(keyword, dividing_x, start_y, end_x, dividing_y))
+            ## 4등분 중 왼쪽 위
+            all_data_list.extend(whole_region(keyword, start_x, dividing_y, dividing_x, end_y))
+            ## 4등분 중 오른쪽 위
+            all_data_list.extend(whole_region(keyword, dividing_x, dividing_y, end_x, end_y))
+            return all_data_list
+
+        else:
+            if resp.json()['meta']['is_end']:
+                all_data_list.extend(resp.json()['documents'])
+                return all_data_list
+            # 아니면 다음 페이지로 넘어가서 데이터 저장
+            else:
+                page_num += 1
+                all_data_list.extend(resp.json()['documents'])
+
+
+def overlapped_data(keyword, start_x, start_y, next_x, next_y, num_x, num_y):
+    # 최종 데이터가 담길 리스트
+    overlapped_result = []
+
+    # 지도를 사각형으로 나누면서 데이터 받아옴
+    for i in range(1, num_x + 1):  ## 1,10
+        end_x = start_x + next_x
+        initial_start_y = start_y
+        for j in range(1, num_y + 1):  ## 1,6
+            end_y = initial_start_y + next_y
+            each_result = whole_region(keyword, start_x, initial_start_y, end_x, end_y)
+            overlapped_result.extend(each_result)
+            initial_start_y = end_y
+        start_x = end_x
+
+    return overlapped_result
 
 
 # 현재 위치 좌표로 가져오기
@@ -82,12 +139,10 @@ def good_feature_sep(top50, text_data_dict):
 
     for value, idx in top50:
         good_feature.append(text_data_dict[idx])
-        print(good_feature_temp)
 
     for i in good_feature:
         st_li = i.split('/')
         good_feature_temp.append(st_li[0])
-    print(good_feature_temp)
     return good_feature_temp
 
 
@@ -102,6 +157,26 @@ def get_good_feature_keywords(good_feature_temp, review):
 
 
 def home(request):
+    # st.title('신촌에서 뭐 먹지?')
+    # if st.button("크롤링"):
+    #     st.write("Data Loading..")
+    #     # 데이터 로딩 함수는 여기에!
+    #
+    #     keyword = '음식점'
+    #     start_x = 126.93
+    #     start_y = 37.55
+    #     next_x = 0.01
+    #     next_y = 0.01
+    #     num_x = 2
+    #     num_y = 2
+    #
+    #     overlapped_result = overlapped_data(keyword, start_x, start_y, next_x, next_y, num_x, num_y)
+    #
+    #     # 최종 데이터가 담긴 리스트 중복값 제거
+    #     results = list(map(dict, OrderedDict.fromkeys(tuple(sorted(d.items())) for d in overlapped_result)))
+    #     for i in results:
+    #         restaurant_info(id=i['id'], name=i['place_name'], x=i['x'], y=i['y'], address=i['road_address_name'],
+    #                         url=i['place_url'], type=(i['category_name'].split('>')[-1])).save()
     return render(request, 'home.html')
 
 
@@ -145,9 +220,6 @@ def findNearRestaurant(request):
 
     df2 = df2.sort_values(by='minDist', axis=0, ascending=True)
 
-    # 추후 최적화 가능해 보임
-    temp = list()
-
     total_food = pd.DataFrame(columns=['store', 'kind', 'score', 'review', 'y'])
 
     review = []
@@ -174,22 +246,6 @@ def findNearRestaurant(request):
             score.append(j)
         for k in reviews:
             review.append(k)
-
-        test = json.dumps({
-            'message': {
-                "restaurant_id": data.id,
-                "name": data.name,
-                "x": data.x,
-                "y": data.y,
-                "address": data.address,
-                "url": data.url,
-                'reviews': reviews
-            },
-            'keyboard': {
-                'type': 'text',
-            }}, ensure_ascii=False)
-
-        temp.append(test)
 
     total_food['store'] = store
     total_food['kind'] = kind
