@@ -1,87 +1,36 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import requests
-import folium
-from folium.plugins import MiniMap
-import requests
-import collections
-from collections import OrderedDict
-import openpyxl
-import os
-import sys
 import time
-import json
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # 설정 및 라이브러리
-import pandas as pd
-from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import warnings
-
 warnings.filterwarnings('ignore')
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import cross_validate
 from sklearn.model_selection import KFold
-from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression
-import re
 import os
-import sys
-import json
-from konlpy.tag import Kkma
-from konlpy.tag import Okt
-import soynlp
-import urllib.request
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.layers import Embedding, Dense, LSTM
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.models import load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 import re
 from konlpy.tag import Okt
-import my_settings
-import requests
-from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import pandas as pd
 from django.db.models import Q
 import streamlit as st
-from collections import OrderedDict
-
-kkma = Kkma()
-okt = Okt()
-
-# 그래프
-plt.rcParams['font.family'] = 'Malgun Gothic'
-plt.rcParams['font.size'] = 18
-plt.rcParams['figure.figsize'] = 30, 15
-plt.rcParams['axes.unicode_minus'] = False
-# 여기서부터 버튼 1 메인 함수까지 주석처리 해둠.
-
+from tqdm import tqdm
 import my_settings
 import requests
 from collections import OrderedDict
 import django
-
-from tqdm import tqdm
 
 # 설정
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
@@ -516,6 +465,7 @@ if __name__ == '__main__':
         st.success("Success")
 
     if st.button("감정 분석"):
+
         st.write("Data Loading..")
         # 데이터 로딩 함수는 여기에!
         df = pd.read_csv('신촌 음식점 정보.csv', encoding='utf8', index_col=0)
@@ -579,6 +529,8 @@ if __name__ == '__main__':
         train_data['ko_review'] = train_data['ko_review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
         train_data[:5]
         stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
+
+        okt = Okt()
 
         # 학습데이터
         X_train = []
@@ -710,7 +662,6 @@ if __name__ == '__main__':
         stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
 
         okt = Okt()
-        okt.morphs('와 이런 것도 음식이라고 차라리 라면을 먹는 게 나을 뻔', stem=True)
 
         # 훈련 데이터 토큰화
         X_train = []
@@ -718,7 +669,6 @@ if __name__ == '__main__':
             tokenized_sentence = okt.morphs(sentence, stem=True)  # 토큰화
             stopwords_removed_sentence = [word for word in tokenized_sentence if not word in stopwords]  # 불용어 제거
             X_train.append(stopwords_removed_sentence)
-        X_train[:3]
 
         # 테스트 데이터 토큰화
         X_test = []
@@ -726,7 +676,6 @@ if __name__ == '__main__':
             tokenized_sentence = okt.morphs(sentence, stem=True)  # 토큰화
             stopwords_removed_sentence = [word for word in tokenized_sentence if not word in stopwords]  # 불용어 제거
             X_test.append(stopwords_removed_sentence)
-        X_test[:3]
 
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts(X_train)
@@ -768,15 +717,6 @@ if __name__ == '__main__':
         plt.xlabel('length of samples')
         plt.ylabel('number of samples')
         plt.show()
-
-
-        def below_threshold_len(max_len, nested_list):
-            count = 0
-            for sentence in nested_list:
-                if (len(sentence) <= max_len):
-                    count = count + 1
-            print('전체 샘플 중 길이가 %s 이하인 샘플의 비율: %s' % (max_len, (count / len(nested_list)) * 100))
-
 
         max_len = 30
         below_threshold_len(max_len, X_train)
@@ -832,9 +772,7 @@ if __name__ == '__main__':
         st.write("Data Loading..")
         # 데이터 로딩 함수는 여기에!
         food_type = st.text_input("드시고 싶은 음식 종류를 입력해주세요.")
-        print(type(food_type))
-        food_tpe = str(st.write(food_type))
-        print(type(food_type))
+        food_tpe = st.write(food_type)
         # 요청 받아야하는 값 : ex)피자
         # 추후 카카오톡 obt도면 수정 예정
         querySet = restaurant_info.objects.filter(Q(name__contains=food_type) | Q(type__contains=food_type)).values()
@@ -948,6 +886,7 @@ if __name__ == '__main__':
         total_list['Review'] = review_li
 
         result = total_list.sort_values('Score', ascending=False)[:3]
+
         result
 
         st.success("Success")
