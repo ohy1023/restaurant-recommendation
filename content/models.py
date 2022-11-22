@@ -16,7 +16,7 @@ class restaurant_info(models.Model):
 
 class restaurant_review(models.Model):
     id = models.BigAutoField(primary_key=True)
-    restaurant_id = models.ForeignKey("restaurant_info", on_delete=models.CASCADE)
+    restaurant = models.ForeignKey("restaurant_info", on_delete=models.CASCADE)
     score = models.IntegerField()
     review = models.TextField()
 
