@@ -3,8 +3,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 # 설정 및 라이브러리
-import numpy as np
-import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import folium_static
 from sklearn.feature_extraction.text import CountVectorizer
@@ -22,19 +20,22 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import re
 from konlpy.tag import Okt
-import osmnx as ox, networkx as nx
-import pandas as pd
 from django.db.models import Q
 import streamlit as st
-from tqdm import tqdm
 import my_settings
-import requests
 from collections import OrderedDict
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
+import osmnx as ox, networkx as nx
+import requests
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 import warnings
 
 warnings.filterwarnings('ignore')
 import django
-
 
 # 설정
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
@@ -491,7 +492,34 @@ if __name__ == '__main__':
 
     with st.container():
         st.header("2. 핵심 로직")
-        st.subheader("Osmnx를 이용한 거리 비교 ( 추가 예정 )")
+        st.subheader("Osmnx를 이용한 거리 계산")
+
+        st.write("신촌역에서 가마마루이 까지의 거리 계산 결과")
+        if st.button("계산하기"):
+            ox.config(use_cache=True, log_console=True)
+            point = 37.5598, 126.9425
+            G = ox.graph_from_point(point, network_type='bike', dist=1500)
+            Gs = ox.utils_graph.get_largest_component(G, strongly=True)
+
+            fig, ax = ox.plot_graph(G, node_size=0, edge_linewidth=0.5)
+
+            G_proj = ox.project_graph(G)
+
+            orig_node = ox.get_nearest_node(G, (37.5598, 126.9425))  # 출발지
+            dest_node = ox.get_nearest_node(G, (37.560372434905, 126.933404416442))  # 도착지
+
+            mpl.rc('font', family='NanumGothic')  # 한글 폰트 적용시
+            plt.rcParams["figure.figsize"] = (20, 20)  # 차트 사이즈
+
+            # find the route between these nodes then plot it
+            route = nx.shortest_path(G, orig_node, dest_node, weight='length')
+            fig, ax = ox.plot_graph_route(G, route, node_size=0)
+
+            st.write(fig)
+            len = nx.shortest_path_length(G, orig_node, dest_node, weight='length') / 1000
+            st.write("신촌역에서 가마마루이까지 거리는", str(round(len, 1)), "킬로미터 입니다.")
+
+            st.success("Success")
 
         st.subheader("LSTM을 이용한 감성 분류 ( RNN으로 수정 예정 )")
         input_statement = st.text_input('문장으로 입력하세요 : ', key='statement', max_chars=100,
@@ -646,7 +674,6 @@ if __name__ == '__main__':
         st.write(" 본 서비스는 사용자의 위치 정보를 사용합니다")
         if st.checkbox("동의하십니까?"):
 
-
             input_food = st.text_input('드시고 싶은 음식을 입력하세요. : ', key='food_name', max_chars=20,
                                        help='전체 조회 할려면 공백으로 두고 찾기 버튼을 누르세요..')
             if st.button("찾기"):
@@ -680,6 +707,7 @@ if __name__ == '__main__':
                     for i in tqdm(range(len(df2))):
                         if (df2['X'][i] == user_y) & (df2['Y'][i] == user_x):
                             pass
+
                         else:
                             orig_node = ox.nearest_nodes(Gs, X=user_x, Y=user_y)  # 출발지
                             dest_node = ox.nearest_nodes(Gs, X=df2['Y'][i], Y=df2['X'][i])  # 목적지
@@ -804,4 +832,3 @@ if __name__ == '__main__':
                     st_data = folium_static(m, width=650, height=600)
 
                     st.success("Success")
-
