@@ -3,8 +3,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 # 설정 및 라이브러리
-import numpy as np
-import matplotlib.pyplot as plt
 import folium
 from streamlit_folium import folium_static
 from sklearn.feature_extraction.text import CountVectorizer
@@ -22,19 +20,22 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import re
 from konlpy.tag import Okt
-import osmnx as ox, networkx as nx
-import pandas as pd
 from django.db.models import Q
 import streamlit as st
-from tqdm import tqdm
 import my_settings
-import requests
 from collections import OrderedDict
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
+import osmnx as ox, networkx as nx
+import requests
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 import warnings
 
 warnings.filterwarnings('ignore')
 import django
-
 
 # 설정
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
@@ -345,7 +346,7 @@ if __name__ == '__main__':
                                 else:
                                     rating = 1
                             if comment == None:
-                                text = "내용이 없습니다"
+                                text = " "
                                 review_content += str(rating) + " - " + text + "\ "
                             else:
                                 review_content += str(rating) + " - " + comment + "\ "
@@ -402,8 +403,7 @@ if __name__ == '__main__':
                         food_df['kind'] = kind
                         food_df['score'] = score
                         food_df['review'] = review
-
-                    total_food = pd.concat([total_food, food_df])
+                        total_food = pd.concat([total_food, food_df])
 
                 total_food = total_food.astype({'score': 'int'})
                 total_food.reset_index(drop=True, inplace=True)
@@ -491,15 +491,40 @@ if __name__ == '__main__':
 
     with st.container():
         st.header("2. 핵심 로직")
-        st.subheader("Osmnx를 이용한 거리 비교 ( 추가 예정 )")
+        st.subheader("Osmnx를 이용한 거리 계산")
 
-        st.subheader("LSTM을 이용한 감성 분류 ( RNN으로 수정 예정 )")
+        st.write("신촌역에서 가마마루이 까지의 거리 계산 결과")
+        if st.button("계산하기"):
+            ox.config(use_cache=True, log_console=False)
+            point = 37.5598, 126.9425
+            G = ox.graph_from_point(point, network_type='drive', dist=1500)
+
+            fig, ax = ox.plot_graph(G, node_size=0, edge_linewidth=0.5)
+
+            orig_node = ox.get_nearest_node(G, (37.5598, 126.9425))  # 출발지
+            dest_node = ox.get_nearest_node(G, (37.560372434905, 126.933404416442))  # 도착지
+
+            # find the route between these nodes then plot it
+            route = nx.shortest_path(G, orig_node, dest_node, weight='length')
+            fig, ax = ox.plot_graph_route(G, route, node_size=0)
+
+            st.write(fig)
+            len = nx.shortest_path_length(G, orig_node, dest_node, weight='length') / 1000
+            st.write("신촌역에서 가마마루이까지 거리는", str(round(len, 1)), "킬로미터 입니다.")
+
+            st.success("Success")
+
+        st.subheader("LSTM을 이용한 감성 분류")
         input_statement = st.text_input('문장으로 입력하세요 : ', key='statement', max_chars=100,
                                         help='문장으로 입력하지 않으면 결과가 이상할 수 있습니다.')
         if st.button("예측"):
             with st.spinner('잠시만 기다려주세요...'):
                 statement = st.session_state.statement
-                df = pd.read_csv('신촌 음식점 정보.csv', encoding='utf8', index_col=0)
+                sin_df = pd.read_csv('신촌 음식점 정보.csv', encoding='utf8', index_col=0)
+                le_df = pd.read_csv('이태원 음식점 정보.csv', encoding='utf8', index_col=0)
+
+                df = pd.concat([sin_df, le_df])
+                df.reset_index(drop=True, inplace=True)
 
                 total_food = pd.DataFrame(columns=['store', 'kind', 'score', 'review', 'y'])
                 s = ['1', '2', '3', '4', '5']
@@ -508,7 +533,7 @@ if __name__ == '__main__':
                     if pd.isna(df['리뷰'][i]):
                         pass
                     else:
-                        k = df['리뷰'][i].split('\\')
+                        k = df['리뷰'][i].split('\\ ')
                         n = df['식당 이름'][i]
                         m = df['종류'][i]
                         del k[-1]
@@ -543,7 +568,7 @@ if __name__ == '__main__':
                     else:
                         total_food['y'][i] = 0
 
-                train_data, test_data = train_test_split(total_food)
+                train_data, test_data = train_test_split(total_food,stratify=total_food['y'],random_state=34)
 
                 train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
                 stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
@@ -602,11 +627,6 @@ if __name__ == '__main__':
                 X_train = np.delete(X_train, drop_train, axis=0)
                 y_train = np.delete(y_train, drop_train, axis=0)
 
-                plt.hist([len(review) for review in X_train], bins=50)
-                plt.xlabel('length of samples')
-                plt.ylabel('number of samples')
-                plt.show()
-
                 max_len = 30
                 below_threshold_len(max_len, X_train)
 
@@ -646,9 +666,8 @@ if __name__ == '__main__':
         st.write(" 본 서비스는 사용자의 위치 정보를 사용합니다")
         if st.checkbox("동의하십니까?"):
 
-
             input_food = st.text_input('드시고 싶은 음식을 입력하세요. : ', key='food_name', max_chars=20,
-                                       help='전체 조회 할려면 공백으로 두고 찾기 버튼을 누르세요..')
+                                       help='공백을 입력하지 마세요..')
             if st.button("찾기"):
                 with st.spinner('잠시만 기다려주세요...'):
                     food_type = st.session_state.food_name
@@ -669,21 +688,22 @@ if __name__ == '__main__':
 
                     # 신촌역 좌표
                     point = 37.5598, 126.9425  # 위도 경도
-                    G = ox.graph_from_point(point, network_type='bike', dist=1500)
-                    Gs = ox.utils_graph.get_largest_component(G, strongly=True)
+                    G = ox.graph_from_point(point, network_type='drive', dist=1500)
 
                     # 요청 받아야하는 값 : 사용자 위치
-                    user_x, user_y = get_my_place_google()
+                    user_y, user_x = get_my_place_google()  # 경도, 위도
 
                     road_li = []  # 도로 기준 최단 거리
 
                     for i in tqdm(range(len(df2))):
-                        if (df2['X'][i] == user_y) & (df2['Y'][i] == user_x):
+                        if (df2['X'][i] == user_x) & (df2['Y'][i] == user_y):
                             pass
+
                         else:
-                            orig_node = ox.nearest_nodes(Gs, X=user_x, Y=user_y)  # 출발지
-                            dest_node = ox.nearest_nodes(Gs, X=df2['Y'][i], Y=df2['X'][i])  # 목적지
-                            len_road = nx.shortest_path_length(Gs, orig_node, dest_node, weight='length')
+                            orig_node = ox.get_nearest_node(G, (user_y, user_x))  # 출발지
+                            dest_node = ox.get_nearest_node(G, (df2['Y'][i], df2['X'][i]))  # 목적지
+                            route = nx.shortest_path(G, orig_node, dest_node, weight='length')
+                            len_road = nx.shortest_path_length(G, orig_node, dest_node, weight='length') / 1000
                             road_li.append(len_road)
 
                     df2['minDist'] = road_li
@@ -703,9 +723,9 @@ if __name__ == '__main__':
 
                         querySet2 = restaurant_info.objects.filter(id=i)
 
-                        querySet3 = restaurant_review.objects.filter(restaurant_id=i).values_list('review', flat=True)
+                        querySet3 = restaurant_review.objects.filter(restaurant=i).values_list('review', flat=True)
 
-                        querySet4 = restaurant_review.objects.filter(restaurant_id=i).values_list('score', flat=True)
+                        querySet4 = restaurant_review.objects.filter(restaurant=i).values_list('score', flat=True)
 
                         data = querySet2.get()
                         reviews = list(querySet3)
@@ -784,7 +804,7 @@ if __name__ == '__main__':
                     total_list['lng'] = lng_li
                     total_list['url'] = url_li
 
-                    result = total_list.sort_values('Score', ascending=False)[:3]
+                    result = total_list.sort_values(by=['Review', 'Score'], ascending=[False, True])[:3]
                     result.reset_index(drop=True, inplace=True)
 
                     st.subheader("추천 맛집 3개")
@@ -794,7 +814,7 @@ if __name__ == '__main__':
                         location=[37.5598, 126.9425],
                         zoom_start=15
                     )
-                    folium.Marker([user_x, user_y], tooltip='현위치').add_to(m)
+                    folium.Marker([user_y, user_x], tooltip='현위치').add_to(m)
                     for i in range(3):
                         folium.Marker([result['lat'][i], result['lng'][i]], popup=f"<pre> 총점 : {result['Score'][i]}<br>"
                                                                                   f"상세 보기 : {result['url'][i]}</pre>",
@@ -804,4 +824,3 @@ if __name__ == '__main__':
                     st_data = folium_static(m, width=650, height=600)
 
                     st.success("Success")
-

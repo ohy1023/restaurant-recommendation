@@ -2,7 +2,7 @@
 import os
 
 import pandas as pd
-
+from tqdm import tqdm
 from django.core.exceptions import ObjectDoesNotExist
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
@@ -17,17 +17,18 @@ from content.models import restaurant_review, restaurant_info
 
 
 def read_csv():
-    df = pd.read_csv('reviews.csv', encoding='utf8')
+    df = pd.read_csv('신촌 리뷰 최종.csv', encoding='utf8')
+    # df = pd.read_csv('이태원 리뷰 최종.csv', encoding='utf8')
     df = df.drop(['Unnamed: 0'], axis=1)
 
     return df
 
 
 if __name__ == '__main__':
-    for i in read_csv().index:
+    for i in tqdm(read_csv().index):
         try:
             id = restaurant_info.objects.get(id=read_csv()['restaurant_id'][i])
-            restaurant_review(restaurant_id=id,
+            restaurant_review(restaurant=id,
                               score=read_csv()['score'][i]
                               , review=read_csv()['review'][i]).save()
         except ObjectDoesNotExist:
