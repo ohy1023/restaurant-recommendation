@@ -667,7 +667,7 @@ if __name__ == '__main__':
         if st.checkbox("동의하십니까?"):
 
             input_food = st.text_input('드시고 싶은 음식을 입력하세요. : ', key='food_name', max_chars=20,
-                                       help='전체 조회 할려면 공백으로 두고 찾기 버튼을 누르세요..')
+                                       help='공백을 입력하지 마세요..')
             if st.button("찾기"):
                 with st.spinner('잠시만 기다려주세요...'):
                     food_type = st.session_state.food_name
