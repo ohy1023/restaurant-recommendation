@@ -23,9 +23,9 @@ class restaurant_review(models.Model):
 
 class good_word(models.Model):
     id = models.BigAutoField(primary_key=True)
-    word = models.CharField(max_length=10)
+    word = models.CharField(max_length=100)
 
 
 class bad_word(models.Model):
     id = models.BigAutoField(primary_key=True)
-    word = models.CharField(max_length=10)
+    word = models.CharField(max_length=100)
