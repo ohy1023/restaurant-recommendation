@@ -466,18 +466,20 @@ if __name__ == '__main__':
                     # 위의 딕셔너리에 담는다.
                     text_data_dict[value] = key
 
+                percentile = int(len(coef_pos_index) / 10)
+
                 # 긍정적인 어조 (상관계수가 1에 가장 큰)
-                top50 = coef_pos_index[:50]
+                top50 = coef_pos_index[:percentile]
                 # 부정적인 어조
-                bottom50 = coef_pos_index[-50:]
+                bottom50 = coef_pos_index[-percentile:]
 
                 good = good_feature_sep(top50, text_data_dict)
-                st.write("긍정 단어 50개")
+                st.write("긍정 단어 10%")
                 good
 
                 bad = bad_feature_sep(bottom50, text_data_dict)
-                st.write("부정 단어 50개")
-                bad
+                st.write("부정 단어 10%")
+                print(bad)
 
                 for i in good:
                     good_word(word=i).save()
@@ -568,7 +570,7 @@ if __name__ == '__main__':
                     else:
                         total_food['y'][i] = 0
 
-                train_data, test_data = train_test_split(total_food,stratify=total_food['y'],random_state=34)
+                train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=34)
 
                 train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
                 stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
@@ -754,6 +756,8 @@ if __name__ == '__main__':
                     del total_food['review']
 
                     total_food.reset_index(drop=True, inplace=True)
+
+                    st.dataframe(total_food)
                     restaurant_reviews = []
                     for i in tqdm(range(len(total_food))):
                         temp_dict = {}
