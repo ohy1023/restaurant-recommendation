@@ -814,7 +814,7 @@ if __name__ == '__main__':
                         location=[37.5598, 126.9425],
                         zoom_start=15
                     )
-                    folium.Marker([user_x, user_y], tooltip='현위치').add_to(m)
+                    folium.Marker([user_y, user_x], tooltip='현위치').add_to(m)
                     for i in range(3):
                         folium.Marker([result['lat'][i], result['lng'][i]], popup=f"<pre> 총점 : {result['Score'][i]}<br>"
                                                                                   f"상세 보기 : {result['url'][i]}</pre>",
