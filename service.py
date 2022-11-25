@@ -522,44 +522,30 @@ if __name__ == '__main__':
         if st.button("예측"):
             with st.spinner('잠시만 기다려주세요...'):
                 statement = st.session_state.statement
-                sin_df = pd.read_csv('신촌 음식점 정보.csv', encoding='utf8', index_col=0)
-                le_df = pd.read_csv('이태원 음식점 정보.csv', encoding='utf8', index_col=0)
 
-                df = pd.concat([sin_df, le_df])
-                df.reset_index(drop=True, inplace=True)
+                total_food = pd.DataFrame(columns=['score', 'review', 'y'])
 
-                total_food = pd.DataFrame(columns=['store', 'kind', 'score', 'review', 'y'])
-                s = ['1', '2', '3', '4', '5']
+                querySet5 = restaurant_info.objects.values_list('id')
 
-                for i in range(len(df)):
-                    if pd.isna(df['리뷰'][i]):
-                        pass
-                    else:
-                        k = df['리뷰'][i].split('\\ ')
-                        n = df['식당 이름'][i]
-                        m = df['종류'][i]
-                        del k[-1]
+                score = []
+                review = []
 
-                        review = []
-                        score = []
-                        store = []
-                        kind = []
+                for i in list(querySet5):
 
-                        for i in k:
-                            j = i.split(' - ')
-                            store.append(n)
-                            kind.append(m)
-                            if j[0] in s:
-                                score.append(j[0])
-                            else:
-                                score.append(-1)
-                            review.append(j[-1])
-                        food_df = pd.DataFrame(columns=['store', 'kind', 'score', 'review', 'y'])
-                        food_df['store'] = store
-                        food_df['kind'] = kind
-                        food_df['score'] = score
-                        food_df['review'] = review
-                    total_food = pd.concat([total_food, food_df])
+                    querySet6 = restaurant_review.objects.filter(restaurant=i).values_list('review', flat=True)
+
+                    querySet7 = restaurant_review.objects.filter(restaurant=i).values_list('score', flat=True)
+
+                    reviews = list(querySet6)
+                    scores = list(querySet7)
+
+                    for j in scores:
+                        score.append(j)
+                    for k in reviews:
+                        review.append(k)
+
+                total_food['score'] = score
+                total_food['review'] = review
 
                 total_food.reset_index(drop=True, inplace=True)
                 total_food = total_food.astype({'score': 'int'})
@@ -571,12 +557,9 @@ if __name__ == '__main__':
                         total_food['y'][i] = 0
 
                 train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=34)
-
                 train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
                 stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
-
                 okt = Okt()
-
                 # 훈련 데이터 토큰화
                 X_train = []
                 for sentence in tqdm(train_data['review']):
@@ -584,7 +567,6 @@ if __name__ == '__main__':
                     stopwords_removed_sentence = [word for word in tokenized_sentence if
                                                   not word in stopwords]  # 불용어 제거
                     X_train.append(stopwords_removed_sentence)
-
                 # 테스트 데이터 토큰화
                 X_test = []
                 for sentence in tqdm(test_data['review']):
@@ -592,16 +574,13 @@ if __name__ == '__main__':
                     stopwords_removed_sentence = [word for word in tokenized_sentence if
                                                   not word in stopwords]  # 불용어 제거
                     X_test.append(stopwords_removed_sentence)
-
                 tokenizer = Tokenizer()
                 tokenizer.fit_on_texts(X_train)
-
                 threshold = 3
                 total_cnt = len(tokenizer.word_index)  # 단어의 수
                 rare_cnt = 0  # 등장 빈도수가 threshold보다 작은 단어의 개수를 카운트
                 total_freq = 0  # 훈련 데이터의 전체 단어 빈도수 총 합
                 rare_freq = 0  # 등장 빈도수가 threshold보다 작은 단어의 등장 빈도수의 총 합
-
                 # 단어와 빈도수의 쌍(pair)을 key와 value로 받는다.
                 for key, value in tokenizer.word_counts.items():
                     total_freq = total_freq + value
@@ -610,51 +589,38 @@ if __name__ == '__main__':
                     if (value < threshold):
                         rare_cnt = rare_cnt + 1
                         rare_freq = rare_freq + value
-
                 # 전체 단어 개수 중 빈도수 2이하인 단어는 제거.
                 # 0번 패딩 토큰을 고려하여 + 1
                 vocab_size = total_cnt - rare_cnt + 1
-
                 tokenizer = Tokenizer(vocab_size)
                 tokenizer.fit_on_texts(X_train)
                 X_train = tokenizer.texts_to_sequences(X_train)
                 X_test = tokenizer.texts_to_sequences(X_test)
-
                 y_train = np.array(train_data['y'])
                 y_test = np.array(test_data['y'])
-
                 drop_train = [index for index, sentence in enumerate(X_train) if len(sentence) < 1]
-
                 # 빈 샘플들을 제거
                 X_train = np.delete(X_train, drop_train, axis=0)
                 y_train = np.delete(y_train, drop_train, axis=0)
-
                 max_len = 30
                 below_threshold_len(max_len, X_train)
-
                 X_train = pad_sequences(X_train, maxlen=max_len)
                 X_test = pad_sequences(X_test, maxlen=max_len)
-
                 X_train = np.asarray(X_train).astype(np.int)
                 X_test = np.asarray(X_train).astype(np.int)
                 y_train = np.asarray(y_train).astype(np.int)
                 y_test = np.asarray(y_train).astype(np.int)
-
                 embedding_dim = 100
                 hidden_units = 128
-
                 model = Sequential()
                 model.add(Embedding(vocab_size, embedding_dim))
                 model.add(LSTM(hidden_units))
                 model.add(Dense(1, activation='sigmoid'))
-
                 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=4)
                 mc = ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=1, save_best_only=True)
-
                 model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['acc'])
                 history = model.fit(X_train, y_train, epochs=15, callbacks=[es, mc], batch_size=64,
                                     validation_split=0.2)
-
                 loaded_model = load_model('best_model.h5')
 
                 st.write(review_predict(statement))
@@ -757,7 +723,6 @@ if __name__ == '__main__':
 
                     total_food.reset_index(drop=True, inplace=True)
 
-                    st.dataframe(total_food)
                     restaurant_reviews = []
                     for i in tqdm(range(len(total_food))):
                         temp_dict = {}
