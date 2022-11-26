@@ -17,7 +17,7 @@ def django_setup() -> None:
 
     # The DJANGO_SETTINGS_MODULE has to be set to allow us to access django imports
     os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE", "djangoProject4.djangoProject4.settings"
+        "DJANGO_SETTINGS_MODULE", "djangoProject4.settings"
     )
 
     # This is for setting up django
