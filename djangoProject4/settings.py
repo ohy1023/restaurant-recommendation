@@ -75,9 +75,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 
-
-st.write("DATABASES",st.secrets["DATABASES"])
-st.write("SECRET_KEY",st.secrets["secret"]["SECRET_KEY"])
+DATABASES = st.secrets["DATABASES"]
+SECRET_KEY = st.secrets["secret"]["SECRET_KEY"]
 
 # import my_settings
 
