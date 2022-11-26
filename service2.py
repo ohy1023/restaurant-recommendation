@@ -22,7 +22,7 @@ import re
 from konlpy.tag import Okt
 from django.db.models import Q
 import streamlit as st
-import my_settings
+# import my_settings
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
@@ -55,7 +55,7 @@ def whole_region(keyword, start_x, start_y, end_x, end_y):
         url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
         params = {'query': keyword, 'page': page_num,
                   'rect': f'{start_x},{start_y},{end_x},{end_y}'}
-        headers = {"Authorization": my_settings.KAKAO_API_KEY}
+        headers = {"Authorization": KAKAO_API_KEY}
         ## 입력예시 -->> headers = {"Authorization": "KakaoAK f64acbasdfasdfasf70e4f52f737760657"}
         resp = requests.get(url, params=params, headers=headers)
 
@@ -208,7 +208,7 @@ def score_predict(new_sentence):
 
 # 현재 위치 좌표로 가져오기
 def get_my_place_google():
-    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={my_settings.GOOGLE_API_KEY}'
+    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={GOOGLE_API_KEY}'
     data = {
         'considerIp': True,
     }
