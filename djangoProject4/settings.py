@@ -79,7 +79,13 @@ WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 # DATABASES = my_settings.DATABASES
 # SECRET_KEY = my_settings.SECRET_KEY
 
-DATABASES = ""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
 SECRET_KEY = 'django-insecure-8)f#(f4f+d2@%$nwdzch#uk9aydmwpxj%ec)ado0=_)-w*sbck'
 
 
