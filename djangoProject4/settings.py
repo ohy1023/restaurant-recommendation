@@ -74,11 +74,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 
 
-import my_settings
+# import my_settings
 
-DATABASES = my_settings.DATABASES
-SECRET_KEY = my_settings.SECRET_KEY
+# DATABASES = my_settings.DATABASES
+# SECRET_KEY = my_settings.SECRET_KEY
 
+
+DATABASES = DATABASES
+SECRET_KEY = SECRET_KEY
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
