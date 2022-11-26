@@ -79,6 +79,8 @@ WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 # DATABASES = my_settings.DATABASES
 # SECRET_KEY = my_settings.SECRET_KEY
 
+DATABASES = ""
+SECRET_KEY = ""
 
 
 # Password validation
