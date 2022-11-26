@@ -31,7 +31,7 @@ import osmnx as ox, networkx as nx
 import requests
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
+from django.core.wsgi import get_wsgi_application
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -41,6 +41,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 # 2번 실행파일에 Django 환경을 불러오는 작업.
 # django.setup()
+application = get_wsgi_application()
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
