@@ -40,13 +40,13 @@ import django
 # 설정
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 # 2번 실행파일에 Django 환경을 불러오는 작업.
-django.setup()
+# django.setup()
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
 
-st.write(KAKAO_API_KEY = st.secrets["KAKAO_API_KEY"])
-st.write(GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"])
+KAKAO_API_KEY = st.secrets["KAKAO_API_KEY"]
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 # 함수 구간
 def whole_region(keyword, start_x, start_y, end_x, end_y):
