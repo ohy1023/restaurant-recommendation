@@ -36,12 +36,14 @@ import warnings
 
 warnings.filterwarnings('ignore')
 import django
-
+from djangoProject4.utils import django_setup
 # 설정
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 # 2번 실행파일에 Django 환경을 불러오는 작업.
 # django.setup()
-application = get_wsgi_application()
+# application = get_wsgi_application()
+
+django_setup()
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
