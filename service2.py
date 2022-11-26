@@ -45,8 +45,8 @@ django.setup()
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
 
-KAKAO_API_KEY = os.environ.get("KAKAO_API_KEY")
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+KAKAO_API_KEY = st.secrets["KAKAO_API_KEY"]
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 
 # 함수 구간
 def whole_region(keyword, start_x, start_y, end_x, end_y):
