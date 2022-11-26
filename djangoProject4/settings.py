@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 
 st.write(st.secrets["DATABASES"])
 st.write(st.secrets["DATABASES.default"])
-DATABASES = st.secrets["DATABASES.default"]
+DATABASES = st.secrets["DATABASES"]
 st.write("츠케")
 SECRET_KEY = st.secrets["secret"]["SECRET_KEY"]
 st.write("츠케 통과")
