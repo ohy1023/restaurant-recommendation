@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 # SECRET_KEY = my_settings.SECRET_KEY
 
 DATABASES = ""
-SECRET_KEY = ""
+SECRET_KEY = 'django-insecure-8)f#(f4f+d2@%$nwdzch#uk9aydmwpxj%ec)ado0=_)-w*sbck'
 
 
 # Password validation
