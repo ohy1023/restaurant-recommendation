@@ -30,7 +30,6 @@ import osmnx as ox, networkx as nx
 import requests
 import MySQLdb
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -311,7 +310,8 @@ if __name__ == '__main__':
                 #                                                'protected_media_identifier': 2, 'app_banner': 2,
                 #                                                'site_engagement': 2, 'durable_storage': 2}}
                 # options.add_experimental_option('prefs', prefs)
-                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+                # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+                driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
                 driver.maximize_window()
 
                 info = pd.DataFrame(columns=['종류', '별점', '리뷰 개수', '오픈 시간', '마감 시간', '해시 태그', '리뷰'])
