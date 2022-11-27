@@ -10,7 +10,7 @@ Mysql
 Streamlit 1.15.1
 
 ## End Point
-https://ohy1023-chatbot-restaurant-recommendation-service2-8rwm99.streamlit.app/
+https://ohy1023-chatbot-restaurant-recommendation-service-m6tmie.streamlit.app/
 
 ## 실행 화면
 ![image](https://user-images.githubusercontent.com/110380812/204121588-fae2d5ee-8cdf-4b69-902c-82a74a96e0a9.png)
