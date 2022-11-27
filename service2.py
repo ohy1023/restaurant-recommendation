@@ -35,21 +35,24 @@ from django.core.wsgi import get_wsgi_application
 import warnings
 
 warnings.filterwarnings('ignore')
+
+# secrets = open("/.streamlit/secrets.toml", encoding="utf-8") #absolute path
+
 import django
-from djangoProject4.utils import django_setup
+# from djangoProject4.utils import django_setup
 # 설정
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 # 2번 실행파일에 Django 환경을 불러오는 작업.
 # django.setup()
-# application = get_wsgi_application()
+application = get_wsgi_application()
 
-django_setup()
+# django_setup()
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
 
-KAKAO_API_KEY = st.secrets["KAKAO_API_KEY"]
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+KAKAO_API_KEY = st.secrets["key"]["KAKAO_API_KEY"]
+GOOGLE_API_KEY = st.secrets["key"]["GOOGLE_API_KEY"]
 
 # 함수 구간
 def whole_region(keyword, start_x, start_y, end_x, end_y):

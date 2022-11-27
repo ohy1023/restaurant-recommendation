@@ -71,23 +71,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djangoProject4.wsgi.application'
 
-DATABASES = st.secrets["DATABASES"]
-st.write(DATABASES)
+
 SECRET_KEY = st.secrets["secret"]["SECRET_KEY"]
-st.write(SECRET_KEY)
 
 # import my_settings
 
 # DATABASES = my_settings.DATABASES
 # SECRET_KEY = my_settings.SECRET_KEY
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
+# DATABASES = st.secrets["DATABASES"]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
