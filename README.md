@@ -1,11 +1,13 @@
+# 공주대학교 산업시스템공학과 종합설계
 
+참여 학생 : 공주대학교 산업시스템공학과 최승하,오형상
+
+## 사용 환경
 Python 3.7
-
-Django-ORM
 
 Mysql
 
-Streamlit
+Streamlit 1.15.1
 
 ## End Point
 https://ohy1023-chatbot-restaurant-recommendation-service2-8rwm99.streamlit.app/
