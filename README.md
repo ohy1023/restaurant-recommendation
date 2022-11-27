@@ -1,10 +1,21 @@
-파이썬 - 3.7 버전
 
+Python 3.7
+
+Django-ORM
+
+Mysql
+
+Streamlit
+
+## End Point
 https://ohy1023-chatbot-restaurant-recommendation-service2-8rwm99.streamlit.app/
 
-지도 교수 - 공주대학교 산업시스템공학과 박동진 교수
+## 실행 화면
+![image](https://user-images.githubusercontent.com/110380812/204121588-fae2d5ee-8cdf-4b69-902c-82a74a96e0a9.png)
+![image](https://user-images.githubusercontent.com/110380812/204121602-166b6d6f-a62c-43eb-9bdd-6c208ed3b335.png)
+![image](https://user-images.githubusercontent.com/110380812/204121614-6612e3ad-7bd2-481b-a2b0-c6c0491e6ac2.png)
+![image](https://user-images.githubusercontent.com/110380812/204121620-0043424a-82bd-48e1-8b60-486711eb77b8.png)
 
-참여 학생 - 공주대학교 산업시스템공학과 최승하, 오형상
 
 ## 1️⃣ 프로젝트 취지 및 목적
 
@@ -18,7 +29,8 @@ https://ohy1023-chatbot-restaurant-recommendation-service2-8rwm99.streamlit.app/
 
  KAKAO API를 이용하여 시작 좌표에서 경도/위도를 움직이며 해당 지역에 음식점 정보를 크롤링 하였고, 음식점 정보에 있는 가게 url에 Selenium 라이브러리를 통해 접근하여 가게 리뷰를 크롤링 하여음식점 정보 테이블과 음식점 리뷰 테이블을 만들어 DB화하였습니다.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/541a5a8e-4767-405e-b788-329280fe8fa0/Untitled.png)
+![화면 캡처 2022-11-27 145401](https://user-images.githubusercontent.com/110380812/204121464-18437727-b1ce-4497-9c20-70cf75d928b0.png)
+
 
 ### Sentiment Dictionary
 
@@ -44,6 +56,6 @@ DB에서 선정된 음식점들의 리뷰를 가져와  DB에 저장된 감성 �
 
  학습을 통한 예측을 기반 추천 시스템을 통해서 시간적 효율성과 한눈에 보기 쉬운 비교 분석을 할 수 있습니다. 또한, 서버를 통하여 지역을 확대해나갈 수 있는 확장성을 염두에 두고 개발을 진행하여 원하는 지역을 간단하게 추가 작업할 수 있는 방안으로 제작되었습니다.
 
-✔️ 판넬 원고 내용 : [신촌에서 뭐 먹지? (notion.so)](https://www.notion.so/e9abe8ef8c8042658c73c7faf4c2555a)
+✔️ 내용 : [신촌에서 뭐 먹지? (notion.so)](https://www.notion.so/e9abe8ef8c8042658c73c7faf4c2555a)
 
-✔️ 전체 코드 보기 : [https://github.com/ohy1023/chatbot-restaurant-recommendation](https://github.com/ohy1023/chatbot-restaurant-recommendation)
+✔️ 코드 보기 : [https://github.com/ohy1023/chatbot-restaurant-recommendation](https://github.com/ohy1023/chatbot-restaurant-recommendation)
