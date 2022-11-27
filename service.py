@@ -45,6 +45,7 @@ GOOGLE_API_KEY = st.secrets["key"]["GOOGLE_API_KEY"]
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
+
 def init_connection():
     config = st.secrets["DATABASES"]
     return MySQLdb.connect(
@@ -53,6 +54,8 @@ def init_connection():
         host=config["HOST"],
         db=config["NAME"]
     )
+
+
 def whole_region(keyword, start_x, start_y, end_x, end_y):
     page_num = 1
     # 데이터가 담길 리스트
@@ -237,6 +240,7 @@ def extract_review():
     # 리뷰가 있는 경우
     return review_lists
 
+
 if __name__ == '__main__':
 
     space = """
@@ -265,13 +269,13 @@ if __name__ == '__main__':
                 cursor = conn.cursor()
                 for i in results:
                     sql = "INSERT INTO content_restaurant_info values (%s,%s,%s,%s,%s,%s,%s)"
-                    val = (i['id'],i['place_name'],i['x'],i['y'],i['road_address_name'],i['place_url'],i['category_name'].split('>')[-1])
+                    val = (i['id'], i['place_name'], i['x'], i['y'], i['road_address_name'], i['place_url'],
+                           i['category_name'].split('>')[-1])
 
-                    cursor.execute(sql,val)
+                    cursor.execute(sql, val)
                     # restaurant_info(id=i['id'], name=i['place_name'], x=i['x'], y=i['y'],
                     #                 address=i['road_address_name'],
                     #                 url=i['place_url'], type=(i['category_name'].split('>')[-1])).save()
-
 
                 conn.commit()
 
@@ -307,9 +311,10 @@ if __name__ == '__main__':
                                                                'protected_media_identifier': 2, 'app_banner': 2,
                                                                'site_engagement': 2, 'durable_storage': 2}}
                 options.add_experimental_option('prefs', prefs)
-                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
+                # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
                 # driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(),options=options)
                 # driver = webdriver.Chrome('D:/공주대학교/4-2/종합 설계/python_project/chromedriver.exe', options=options)
+                driver = webdriver.Chrome('/home/appuser/.wdm/drivers/chromedriver/linux64/107.0.5304/chromedriver.exe', options=options)
                 driver.maximize_window()
 
                 info = pd.DataFrame(columns=['종류', '별점', '리뷰 개수', '오픈 시간', '마감 시간', '해시 태그', '리뷰'])
@@ -518,10 +523,10 @@ if __name__ == '__main__':
                 cursor = conn.cursor()
 
                 for i in good:
-                    cursor.execute("INSERT INTO content_good_word(word) values (%s)",[i])
+                    cursor.execute("INSERT INTO content_good_word(word) values (%s)", [i])
 
                 for j in bad:
-                    cursor.execute("INSERT INTO content_bad_word(word) values (%s)",[j])
+                    cursor.execute("INSERT INTO content_bad_word(word) values (%s)", [j])
 
                 conn.commit()
 
