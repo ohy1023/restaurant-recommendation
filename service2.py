@@ -65,7 +65,7 @@ def whole_region(keyword, start_x, start_y, end_x, end_y):
         params = {'query': keyword, 'page': page_num,
                   'rect': f'{start_x},{start_y},{end_x},{end_y}'}
         # headers = {"Authorization": KAKAO_API_KEY}
-        headers = {"Authorization": st.secrets.KAKAO_API_KEY}
+        headers = {"Authorization": KAKAO_API_KEY}
         ## 입력예시 -->> headers = {"Authorization": "KakaoAK f64acbasdfasdfasf70e4f52f737760657"}
         resp = requests.get(url, params=params, headers=headers)
 
@@ -218,7 +218,7 @@ def score_predict(new_sentence):
 
 # 현재 위치 좌표로 가져오기
 def get_my_place_google():
-    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={st.secrets.GOOGLE_API_KEY}'
+    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={GOOGLE_API_KEY}'
     data = {
         'considerIp': True,
     }
