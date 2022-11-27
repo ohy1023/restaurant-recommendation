@@ -22,16 +22,13 @@ import re
 from konlpy.tag import Okt
 from django.db.models import Q
 import streamlit as st
-import my_settings
 from collections import OrderedDict
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import requests
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
+import MySQLdb
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -41,11 +38,19 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "djangoProject4.settings")
 # 2번 실행파일에 Django 환경을 불러오는 작업.
 django.setup()
+KAKAO_API_KEY = st.secrets["key"]["KAKAO_API_KEY"]
+GOOGLE_API_KEY = st.secrets["key"]["GOOGLE_API_KEY"]
 
 from content.models import restaurant_info, restaurant_review, good_word, bad_word
 
-
-# 함수 구간
+def init_connection():
+    config = st.secrets["DATABASES"]
+    return MySQLdb.connect(
+        user=config["USER"],
+        password=config["PASSWORD"],
+        host=config["HOST"],
+        db=config["NAME"]
+    )
 def whole_region(keyword, start_x, start_y, end_x, end_y):
     page_num = 1
     # 데이터가 담길 리스트
@@ -55,7 +60,7 @@ def whole_region(keyword, start_x, start_y, end_x, end_y):
         url = 'https://dapi.kakao.com/v2/local/search/keyword.json'
         params = {'query': keyword, 'page': page_num,
                   'rect': f'{start_x},{start_y},{end_x},{end_y}'}
-        headers = {"Authorization": my_settings.KAKAO_API_KEY}
+        headers = {"Authorization": KAKAO_API_KEY}
         ## 입력예시 -->> headers = {"Authorization": "KakaoAK f64acbasdfasdfasf70e4f52f737760657"}
         resp = requests.get(url, params=params, headers=headers)
 
@@ -190,9 +195,25 @@ def review_predict(new_sentence):
         return "{:.2f}% 확률로 부정 리뷰입니다.\n".format((1 - score) * 100)
 
 
+def score_predict(new_sentence):
+    new_sentence = re.sub(r'[^ㄱ-ㅎㅏ-ㅣ가-힣 ]', '', new_sentence)
+    new_sentence = okt.morphs(new_sentence, stem=True)  # 토큰화
+    new_sentence = [word for word in new_sentence if not word in stopwords]  # 불용어 제거
+    encoded = tokenizer.texts_to_sequences([new_sentence])  # 정수 인코딩
+    pad_new = pad_sequences(encoded, maxlen=max_len)  # 패딩
+    score = float(loaded_model.predict(pad_new))  # 예측
+    if (score > 0.5):
+        y = 1
+        y_score = score * 100
+    else:
+        y = 0
+        y_score = score * 100
+    return y
+
+
 # 현재 위치 좌표로 가져오기
 def get_my_place_google():
-    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={my_settings.GOOGLE_API_KEY}'
+    url = f'https://www.googleapis.com/geolocation/v1/geolocate?key={GOOGLE_API_KEY}'
     data = {
         'considerIp': True,
     }
@@ -213,7 +234,6 @@ def extract_review():
     review_lists = soup.select('.list_evaluation > li')
     # 리뷰가 있는 경우
     return review_lists
-
 
 if __name__ == '__main__':
 
@@ -239,10 +259,22 @@ if __name__ == '__main__':
 
                 # 최종 데이터가 담긴 리스트 중복값 제거
                 results = list(map(dict, OrderedDict.fromkeys(tuple(sorted(d.items())) for d in overlapped_result)))
+                conn = init_connection()
+                cursor = conn.cursor()
                 for i in results:
-                    restaurant_info(id=i['id'], name=i['place_name'], x=i['x'], y=i['y'],
-                                    address=i['road_address_name'],
-                                    url=i['place_url'], type=(i['category_name'].split('>')[-1])).save()
+                    sql = "INSERT INTO content_restaurant_info values (%s,%s,%s,%s,%s,%s,%s)"
+                    val = (i['id'],i['place_name'],i['x'],i['y'],i['road_address_name'],i['place_url'],i['category_name'].split('>')[-1])
+
+                    cursor.execute(sql,val)
+                    # restaurant_info(id=i['id'], name=i['place_name'], x=i['x'], y=i['y'],
+                    #                 address=i['road_address_name'],
+                    #                 url=i['place_url'], type=(i['category_name'].split('>')[-1])).save()
+
+
+                conn.commit()
+
+                cursor.close()
+                conn.close()
 
                 st.success("Success")
 
@@ -465,27 +497,30 @@ if __name__ == '__main__':
 
                     # 위의 딕셔너리에 담는다.
                     text_data_dict[value] = key
-
                 percentile = int(len(coef_pos_index) / 10)
-
                 # 긍정적인 어조 (상관계수가 1에 가장 큰)
                 top50 = coef_pos_index[:percentile]
                 # 부정적인 어조
                 bottom50 = coef_pos_index[-percentile:]
 
                 good = good_feature_sep(top50, text_data_dict)
-                st.write("긍정 단어 10%")
+                st.write("긍정 단어 50개")
                 good
 
                 bad = bad_feature_sep(bottom50, text_data_dict)
-                st.write("부정 단어 10%")
-                print(bad)
+                st.write("부정 단어 50개")
+                bad
+
+                conn = init_connection()
+                cursor = conn.cursor()
 
                 for i in good:
-                    good_word(word=i).save()
+                    cursor.execute("INSERT INTO content_good_word(word) values (%s)",[i])
 
                 for j in bad:
-                    bad_word(word=j).save()
+                    cursor.execute("INSERT INTO content_bad_word(word) values (%s)",[j])
+
+                conn.commit()
 
                 st.success("Success")
 
@@ -525,27 +560,15 @@ if __name__ == '__main__':
 
                 total_food = pd.DataFrame(columns=['score', 'review', 'y'])
 
-                querySet5 = restaurant_info.objects.values_list('id')
+                querySet6 = restaurant_review.objects.values_list('review', flat=True)
 
-                score = []
-                review = []
+                querySet7 = restaurant_review.objects.values_list('score', flat=True)
 
-                for i in list(querySet5):
+                reviews = list(querySet6)
+                scores = list(querySet7)
 
-                    querySet6 = restaurant_review.objects.filter(restaurant=i).values_list('review', flat=True)
-
-                    querySet7 = restaurant_review.objects.filter(restaurant=i).values_list('score', flat=True)
-
-                    reviews = list(querySet6)
-                    scores = list(querySet7)
-
-                    for j in scores:
-                        score.append(j)
-                    for k in reviews:
-                        review.append(k)
-
-                total_food['score'] = score
-                total_food['review'] = review
+                total_food['score'] = scores
+                total_food['review'] = reviews
 
                 total_food.reset_index(drop=True, inplace=True)
                 total_food = total_food.astype({'score': 'int'})
@@ -556,7 +579,7 @@ if __name__ == '__main__':
                     else:
                         total_food['y'][i] = 0
 
-                train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=34)
+                train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=25)
                 train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
                 stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
                 okt = Okt()
@@ -635,10 +658,99 @@ if __name__ == '__main__':
         if st.checkbox("동의하십니까?"):
 
             input_food = st.text_input('드시고 싶은 음식을 입력하세요. : ', key='food_name', max_chars=20,
-                                       help='공백을 입력하지 마세요..')
+                                       help='해당 음식 종류가 없을 경우 재입력해주세요.')
             if st.button("찾기"):
                 with st.spinner('잠시만 기다려주세요...'):
                     food_type = st.session_state.food_name
+
+                    total_food = pd.DataFrame(columns=['score', 'review', 'y'])
+
+                    querySet6 = restaurant_review.objects.values_list('review', flat=True)
+
+                    querySet7 = restaurant_review.objects.values_list('score', flat=True)
+
+                    reviews = list(querySet6)
+                    scores = list(querySet7)
+
+                    total_food['score'] = scores
+                    total_food['review'] = reviews
+
+                    total_food.reset_index(drop=True, inplace=True)
+                    total_food = total_food.astype({'score': 'int'})
+
+                    for i in tqdm(range(len(total_food))):
+                        if total_food['score'][i] >= 4:
+                            total_food['y'][i] = 1
+                        else:
+                            total_food['y'][i] = 0
+
+                    train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=25)
+                    train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
+                    stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한',
+                                 '하다']
+                    okt = Okt()
+                    # 훈련 데이터 토큰화
+                    X_train = []
+                    for sentence in tqdm(train_data['review']):
+                        tokenized_sentence = okt.morphs(sentence, stem=True)  # 토큰화
+                        stopwords_removed_sentence = [word for word in tokenized_sentence if
+                                                      not word in stopwords]  # 불용어 제거
+                        X_train.append(stopwords_removed_sentence)
+                    # 테스트 데이터 토큰화
+                    X_test = []
+                    for sentence in tqdm(test_data['review']):
+                        tokenized_sentence = okt.morphs(sentence, stem=True)  # 토큰화
+                        stopwords_removed_sentence = [word for word in tokenized_sentence if
+                                                      not word in stopwords]  # 불용어 제거
+                        X_test.append(stopwords_removed_sentence)
+                    tokenizer = Tokenizer()
+                    tokenizer.fit_on_texts(X_train)
+                    threshold = 3
+                    total_cnt = len(tokenizer.word_index)  # 단어의 수
+                    rare_cnt = 0  # 등장 빈도수가 threshold보다 작은 단어의 개수를 카운트
+                    total_freq = 0  # 훈련 데이터의 전체 단어 빈도수 총 합
+                    rare_freq = 0  # 등장 빈도수가 threshold보다 작은 단어의 등장 빈도수의 총 합
+                    # 단어와 빈도수의 쌍(pair)을 key와 value로 받는다.
+                    for key, value in tokenizer.word_counts.items():
+                        total_freq = total_freq + value
+
+                        # 단어의 등장 빈도수가 threshold보다 작으면
+                        if (value < threshold):
+                            rare_cnt = rare_cnt + 1
+                            rare_freq = rare_freq + value
+                    # 전체 단어 개수 중 빈도수 2이하인 단어는 제거.
+                    # 0번 패딩 토큰을 고려하여 + 1
+                    vocab_size = total_cnt - rare_cnt + 1
+                    tokenizer = Tokenizer(vocab_size)
+                    tokenizer.fit_on_texts(X_train)
+                    X_train = tokenizer.texts_to_sequences(X_train)
+                    X_test = tokenizer.texts_to_sequences(X_test)
+                    y_train = np.array(train_data['y'])
+                    y_test = np.array(test_data['y'])
+                    drop_train = [index for index, sentence in enumerate(X_train) if len(sentence) < 1]
+                    # 빈 샘플들을 제거
+                    X_train = np.delete(X_train, drop_train, axis=0)
+                    y_train = np.delete(y_train, drop_train, axis=0)
+                    max_len = 30
+                    below_threshold_len(max_len, X_train)
+                    X_train = pad_sequences(X_train, maxlen=max_len)
+                    X_test = pad_sequences(X_test, maxlen=max_len)
+                    X_train = np.asarray(X_train).astype(np.int)
+                    X_test = np.asarray(X_train).astype(np.int)
+                    y_train = np.asarray(y_train).astype(np.int)
+                    y_test = np.asarray(y_train).astype(np.int)
+                    embedding_dim = 100
+                    hidden_units = 128
+                    model = Sequential()
+                    model.add(Embedding(vocab_size, embedding_dim))
+                    model.add(LSTM(hidden_units))
+                    model.add(Dense(1, activation='sigmoid'))
+                    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=4)
+                    mc = ModelCheckpoint('best_model.h5', monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+                    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['acc'])
+                    history = model.fit(X_train, y_train, epochs=15, callbacks=[es, mc], batch_size=64,
+                                        validation_split=0.2)
+                    loaded_model = load_model('best_model.h5')
 
                     # 요청 받아야하는 값 : ex)피자
                     # 추후 카카오톡 obt도면 수정 예정
@@ -723,6 +835,16 @@ if __name__ == '__main__':
 
                     total_food.reset_index(drop=True, inplace=True)
 
+                    predict_food = total_food
+                    # ----
+                    pre_score = []
+                    for i in range(len(predict_food)):
+                        k = score_predict(predict_food["ko_review"][i])
+                        pre_score.append(k)
+                    predict_food['pre_score'] = pre_score
+
+                    # ----
+
                     restaurant_reviews = []
                     for i in tqdm(range(len(total_food))):
                         temp_dict = {}
@@ -772,12 +894,29 @@ if __name__ == '__main__':
                     total_list['lat'] = lat_li
                     total_list['lng'] = lng_li
                     total_list['url'] = url_li
+                    # ---
+                    pscore_li = []
+                    pstore_li = []
 
-                    result = total_list.sort_values(by=['Review', 'Score'], ascending=[False, True])[:3]
+                    for i in range(len(store_unique)):
+                        psample_df = predict_food[predict_food['store'] == store_unique['store'][i]]
+                        psample_df.reset_index(drop=True, inplace=True)
+                        pstore_li.append(psample_df['store'][0])
+                        pscore_li.append(round((psample_df['pre_score'].sum() / len(psample_df['pre_score']) * 100), 2))
+
+                    total_list['Pre_Score'] = pscore_li
+                    # ---
+                    st.dataframe(total_list)
+
+                    totalScore = []
+                    for i in range(len(total_list)):
+                        totalScore.append((total_list['Score'][i] + total_list['Pre_Score'][i]) / 2)
+                    total_list['Total Score'] = totalScore
+                    result = total_list.sort_values(by=['Review', 'Total Score'], ascending=[False, True])[:3]
                     result.reset_index(drop=True, inplace=True)
 
                     st.subheader("추천 맛집 3개")
-                    st.dataframe(result.style.highlight_max('Score'))
+                    st.dataframe(result.style.highlight_max('Total Score'))
 
                     m = folium.Map(
                         location=[37.5598, 126.9425],
