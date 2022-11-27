@@ -3,7 +3,7 @@
 .idea/
 venv
 /cache
-.toml
+.streamlit/secrets.toml
 ### Django ###
 *.log
 *.pot
