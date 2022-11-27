@@ -1,5 +1,7 @@
 파이썬 - 3.7 버전
 
+https://ohy1023-chatbot-restaurant-recommendation-service2-8rwm99.streamlit.app/
+
 지도 교수 - 공주대학교 산업시스템공학과 박동진 교수
 
 참여 학생 - 공주대학교 산업시스템공학과 최승하, 오형상
