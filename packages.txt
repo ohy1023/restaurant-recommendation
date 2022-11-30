@@ -2,5 +2,5 @@ default-jre
 python3-dev
 default-libmysqlclient-dev
 build-essential
-freeglut3-dev
-libgtk2.0-dev
+chromium
+chromium-driver
