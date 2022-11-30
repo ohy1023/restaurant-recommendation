@@ -313,6 +313,7 @@ if __name__ == '__main__':
                 # options.add_experimental_option('prefs', prefs)
                 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
                 driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
+                # driver = webdriver.Chrome(executable_path='C:/path/to/chromedriver.exe')
                 driver.maximize_window()
 
                 info = pd.DataFrame(columns=['종류', '별점', '리뷰 개수', '오픈 시간', '마감 시간', '해시 태그', '리뷰'])
