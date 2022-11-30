@@ -31,6 +31,8 @@ import MySQLdb
 from webdriver_manager.chrome import ChromeDriverManager
 import warnings
 
+from webdriver_manager.core.utils import ChromeType
+
 warnings.filterwarnings('ignore')
 import django
 
@@ -312,7 +314,8 @@ if __name__ == '__main__':
                 #                                                'site_engagement': 2, 'durable_storage': 2}}
                 # options.add_experimental_option('prefs', prefs)
                 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-                driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
+                # driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
+                driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
                 # driver = webdriver.Chrome(executable_path='C:/path/to/chromedriver.exe')
                 driver.maximize_window()
 
