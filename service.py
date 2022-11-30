@@ -789,7 +789,7 @@ if __name__ == '__main__':
 
                     # 요청 받아야하는 값 : 사용자 위치
                     # user_y, user_x = get_my_place_google()  # 경도, 위도
-                    user_y, user_x = 126.9425, 37.5598
+                    user_y, user_x = 127.1531, 36.8509
 
                     road_li = []  # 도로 기준 최단 거리
 
