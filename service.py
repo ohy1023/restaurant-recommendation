@@ -1,6 +1,5 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 # 설정 및 라이브러리
 import folium
@@ -28,13 +27,10 @@ from tqdm import tqdm
 import osmnx as ox, networkx as nx
 import requests
 import MySQLdb
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 import warnings
 
-from webdriver_manager.core.utils import ChromeType
 
 warnings.filterwarnings('ignore')
 import django
@@ -278,9 +274,6 @@ if __name__ == '__main__':
                            i['category_name'].split('>')[-1])
 
                     cursor.execute(sql, val)
-                    # restaurant_info(id=i['id'], name=i['place_name'], x=i['x'], y=i['y'],
-                    #                 address=i['road_address_name'],
-                    #                 url=i['place_url'], type=(i['category_name'].split('>')[-1])).save()
 
                 conn.commit()
 
@@ -295,7 +288,6 @@ if __name__ == '__main__':
             with st.spinner('잠시만 기다려주세요...'):
                 df = pd.read_csv('신촌 음식점.csv', encoding='utf-8-sig')
 
-                # options = webdriver.ChromeOptions()  # 크롬 옵션 객체 생성
                 options = Options()
                 options.add_argument("--headless")
                 options.add_argument("--no-sandbox")
@@ -304,33 +296,9 @@ if __name__ == '__main__':
                 options.add_argument("--disable-features=NetworkService")
                 options.add_argument("--window-size=1920x1080")
                 options.add_argument("--disable-features=VizDisplayCompositor")
-                # options.add_argument("--headless")  # headless 모드 설정
-                # options.add_argument('--no-sandbox')
-                # options.add_argument("disable-gpu")
-                # options.add_argument("disable-infobars")
-                # options.add_argument("--disable-extensions")
-                # options.add_argument("start-maximized")
-                # options.add_argument("--disable-dev-shm-usage")
-                # options.add_argument("--no-sandbox")
-                # options.add_argument("--single-process")
-                # 속도 향상을 위한 옵션 해제
-                # prefs = {
-                #     'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'plugins': 2, 'popups': 2,
-                #                                                'geolocation': 2, 'notifications': 2,
-                #                                                'auto_select_certificate': 2, 'fullscreen': 2,
-                #                                                'mouselock': 2, 'mixed_script': 2, 'media_stream': 2,
-                #                                                'media_stream_mic': 2, 'media_stream_camera': 2,
-                #                                                'protocol_handlers': 2, 'ppapi_broker': 2,
-                #                                                'automatic_downloads': 2, 'midi_sysex': 2,
-                #                                                'push_messaging': 2, 'ssl_cert_decisions': 2,
-                #                                                'metro_switch_to_desktop': 2,
-                #                                                'protected_media_identifier': 2, 'app_banner': 2,
-                #                                                'site_engagement': 2, 'durable_storage': 2}}
-                # options.add_experimental_option('prefs', prefs)
-                # driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+
                 driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
-                # driver = webdriver.Chrome(executable_path='C:/path/to/chromedriver.exe')
-                # driver.maximize_window()
+
 
                 info = pd.DataFrame(columns=['종류', '별점', '리뷰 개수', '오픈 시간', '마감 시간', '해시 태그', '리뷰'])
 
