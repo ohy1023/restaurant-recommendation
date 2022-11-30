@@ -770,7 +770,7 @@ if __name__ == '__main__':
                     # 추후 카카오톡 obt도면 수정 예정
 
                     cursor.execute(
-                        "SELECT id,x,y FROM content_restaurant_info WHERE name like '%피자%' or type like '%피자%'")
+                        "SELECT id,x,y FROM content_restaurant_info WHERE name like '%{}%' or type like '%{}%'".format(food_type,food_type))
 
                     temp = cursor.fetchall()
 
