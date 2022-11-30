@@ -788,7 +788,8 @@ if __name__ == '__main__':
                     G = ox.graph_from_point(point, network_type='drive', dist=1500)
 
                     # 요청 받아야하는 값 : 사용자 위치
-                    user_y, user_x = get_my_place_google()  # 경도, 위도
+                    # user_y, user_x = get_my_place_google()  # 경도, 위도
+                    user_y, user_x = 126.9425, 37.5598
 
                     road_li = []  # 도로 기준 최단 거리
 
@@ -819,16 +820,11 @@ if __name__ == '__main__':
 
                     for i in list(df2['pk'][:10]):
 
-                        # querySet2 = restaurant_info.objects.filter(id=i)
 
                         cursor.execute("Select name,type,y,x,url FROM content_restaurant_info WHERE id = %s",[i])
 
-                        # data = querySet2.get()
-                        # data = cursor.fetchall()
-                        # print(data)
                         data = cursor.fetchone()
 
-                        # id가 같은 식당의 리뷰를 가져오도록 수정해야함
                         cursor.execute("Select review From content_restaurant_review WHERE restaurant_id= %s", [i])
 
                         reviews = [item[0] for item in cursor.fetchall()]
