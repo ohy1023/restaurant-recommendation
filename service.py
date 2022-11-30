@@ -293,15 +293,15 @@ if __name__ == '__main__':
                 df = pd.read_csv('신촌 음식점.csv', encoding='utf-8-sig')
 
                 options = webdriver.ChromeOptions()  # 크롬 옵션 객체 생성
-                options.add_argument('headless')  # headless 모드 설정
+                options.add_argument("--headless")  # headless 모드 설정
                 options.add_argument('--no-sandbox')
                 options.add_argument("disable-gpu")
-                options.add_argument("disable-infobars")
-                options.add_argument("--disable-extensions")
-                options.add_argument("start-maximized")
-                options.add_argument("--disable-dev-shm-usage")
-                options.add_argument("--no-sandbox")
-                options.add_argument("--single-process")
+                # options.add_argument("disable-infobars")
+                # options.add_argument("--disable-extensions")
+                # options.add_argument("start-maximized")
+                # options.add_argument("--disable-dev-shm-usage")
+                # options.add_argument("--no-sandbox")
+                # options.add_argument("--single-process")
                 # 속도 향상을 위한 옵션 해제
                 # prefs = {
                 #     'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'plugins': 2, 'popups': 2,
