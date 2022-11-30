@@ -295,25 +295,27 @@ if __name__ == '__main__':
                 options = webdriver.ChromeOptions()  # 크롬 옵션 객체 생성
                 options.add_argument('headless')  # headless 모드 설정
                 options.add_argument('--no-sandbox')
-                options.add_argument("window-size=1920x1080")  # 화면크기(전체화면)
                 options.add_argument("disable-gpu")
                 options.add_argument("disable-infobars")
                 options.add_argument("--disable-extensions")
-
+                options.add_argument("start-maximized")
+                options.add_argument("--disable-dev-shm-usage")
+                options.add_argument("--no-sandbox")
+                options.add_argument("--single-process")
                 # 속도 향상을 위한 옵션 해제
-                prefs = {
-                    'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'plugins': 2, 'popups': 2,
-                                                               'geolocation': 2, 'notifications': 2,
-                                                               'auto_select_certificate': 2, 'fullscreen': 2,
-                                                               'mouselock': 2, 'mixed_script': 2, 'media_stream': 2,
-                                                               'media_stream_mic': 2, 'media_stream_camera': 2,
-                                                               'protocol_handlers': 2, 'ppapi_broker': 2,
-                                                               'automatic_downloads': 2, 'midi_sysex': 2,
-                                                               'push_messaging': 2, 'ssl_cert_decisions': 2,
-                                                               'metro_switch_to_desktop': 2,
-                                                               'protected_media_identifier': 2, 'app_banner': 2,
-                                                               'site_engagement': 2, 'durable_storage': 2}}
-                options.add_experimental_option('prefs', prefs)
+                # prefs = {
+                #     'profile.default_content_setting_values': {'cookies': 2, 'images': 2, 'plugins': 2, 'popups': 2,
+                #                                                'geolocation': 2, 'notifications': 2,
+                #                                                'auto_select_certificate': 2, 'fullscreen': 2,
+                #                                                'mouselock': 2, 'mixed_script': 2, 'media_stream': 2,
+                #                                                'media_stream_mic': 2, 'media_stream_camera': 2,
+                #                                                'protocol_handlers': 2, 'ppapi_broker': 2,
+                #                                                'automatic_downloads': 2, 'midi_sysex': 2,
+                #                                                'push_messaging': 2, 'ssl_cert_decisions': 2,
+                #                                                'metro_switch_to_desktop': 2,
+                #                                                'protected_media_identifier': 2, 'app_banner': 2,
+                #                                                'site_engagement': 2, 'durable_storage': 2}}
+                # options.add_experimental_option('prefs', prefs)
                 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
                 # driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
                 driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
@@ -777,7 +779,8 @@ if __name__ == '__main__':
                     # 추후 카카오톡 obt도면 수정 예정
 
                     cursor.execute(
-                        "SELECT id,x,y FROM content_restaurant_info WHERE name like '%{}%' or type like '%{}%'".format(food_type,food_type))
+                        "SELECT id,x,y FROM content_restaurant_info WHERE name like '%{}%' or type like '%{}%'".format(
+                            food_type, food_type))
 
                     temp = cursor.fetchall()
 
@@ -825,8 +828,7 @@ if __name__ == '__main__':
 
                     for i in list(df2['pk'][:10]):
 
-
-                        cursor.execute("Select name,type,y,x,url FROM content_restaurant_info WHERE id = %s",[i])
+                        cursor.execute("Select name,type,y,x,url FROM content_restaurant_info WHERE id = %s", [i])
 
                         data = cursor.fetchone()
 
