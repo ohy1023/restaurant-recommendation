@@ -222,7 +222,9 @@ def get_my_place_google():
     }
 
     result = requests.post(url, data)
-
+    st.write(result)
+    st.write(result.json())
+    st.write(result.json()['location'])
     lat = result.json()['location']['lat']
     lng = result.json()['location']['lng']
 
