@@ -20,7 +20,6 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import re
 from konlpy.tag import Okt
-from django.db.models import Q
 import streamlit as st
 from collections import OrderedDict
 import pandas as pd
@@ -565,12 +564,17 @@ if __name__ == '__main__':
 
                 total_food = pd.DataFrame(columns=['score', 'review', 'y'])
 
-                querySet6 = restaurant_review.objects.values_list('review', flat=True)
+                conn = init_connection()
 
-                querySet7 = restaurant_review.objects.values_list('score', flat=True)
+                cursor = conn.cursor()
 
-                reviews = list(querySet6)
-                scores = list(querySet7)
+                cursor.execute("Select review From content_restaurant_review")
+
+                reviews = [item[0] for item in cursor.fetchall()]
+
+                cursor.execute("Select score From content_restaurant_review")
+
+                scores = [item[0] for item in cursor.fetchall()]
 
                 total_food['score'] = scores
                 total_food['review'] = reviews
@@ -670,12 +674,17 @@ if __name__ == '__main__':
 
                     total_food = pd.DataFrame(columns=['score', 'review', 'y'])
 
-                    querySet6 = restaurant_review.objects.values_list('review', flat=True)
+                    conn = init_connection()
 
-                    querySet7 = restaurant_review.objects.values_list('score', flat=True)
+                    cursor = conn.cursor()
 
-                    reviews = list(querySet6)
-                    scores = list(querySet7)
+                    cursor.execute("Select review From content_restaurant_review")
+
+                    reviews = [item[0] for item in cursor.fetchall()]
+
+                    cursor.execute("Select score From content_restaurant_review")
+
+                    scores = [item[0] for item in cursor.fetchall()]
 
                     total_food['score'] = scores
                     total_food['review'] = reviews
@@ -759,14 +768,15 @@ if __name__ == '__main__':
 
                     # 요청 받아야하는 값 : ex)피자
                     # 추후 카카오톡 obt도면 수정 예정
-                    querySet = restaurant_info.objects.filter(
-                        Q(name__contains=food_type) | Q(type__contains=food_type)).values()
 
-                    querySet = list(querySet)
+                    cursor.execute(
+                        "SELECT id,x,y FROM content_restaurant_info WHERE name like '%피자%' or type like '%피자%'")
 
-                    pk = [i['id'] for i in querySet]
-                    X = [j['x'] for j in querySet]  # 경도
-                    Y = [k['y'] for k in querySet]  # 위도
+                    temp = cursor.fetchall()
+
+                    pk = [item[0] for item in temp]
+                    X = [item[1] for item in temp]
+                    Y = [item[2] for item in temp]
 
                     df2 = pd.DataFrame({'pk': pk, 'X': X, 'Y': Y})
                     df2.reset_index(drop=True, inplace=True)
@@ -794,6 +804,7 @@ if __name__ == '__main__':
                     df2['minDist'] = road_li
 
                     df2 = df2.sort_values(by='minDist', axis=0, ascending=True)
+                    st.dataframe(df2)
                     total_food = pd.DataFrame(columns=['store', 'kind', 'score', 'review', 'y', 'lat', 'lng', 'url'])
 
                     review = []
@@ -806,22 +817,30 @@ if __name__ == '__main__':
 
                     for i in list(df2['pk'][:10]):
 
-                        querySet2 = restaurant_info.objects.filter(id=i)
+                        # querySet2 = restaurant_info.objects.filter(id=i)
 
-                        querySet3 = restaurant_review.objects.filter(restaurant=i).values_list('review', flat=True)
+                        cursor.execute("Select name,type,y,x,url FROM content_restaurant_info WHERE id = %s",[i])
 
-                        querySet4 = restaurant_review.objects.filter(restaurant=i).values_list('score', flat=True)
+                        # data = querySet2.get()
+                        # data = cursor.fetchall()
+                        # print(data)
+                        data = cursor.fetchone()
 
-                        data = querySet2.get()
-                        reviews = list(querySet3)
-                        scores = list(querySet4)
+                        # id가 같은 식당의 리뷰를 가져오도록 수정해야함
+                        cursor.execute("Select review From content_restaurant_review WHERE restaurant_id= %s", [i])
+
+                        reviews = [item[0] for item in cursor.fetchall()]
+
+                        cursor.execute("Select score From content_restaurant_review WHERE restaurant_id = %s", [i])
+
+                        scores = [item[0] for item in cursor.fetchall()]
 
                         for _ in range(len(reviews)):
-                            store.append(data.name)
-                            kind.append(data.type)
-                            lat.append(data.y)
-                            lng.append(data.x)
-                            url.append(data.url)
+                            store.append(data[0])
+                            kind.append(data[1])
+                            lat.append(data[2])
+                            lng.append(data[3])
+                            url.append(data[4])
                         for j in scores:
                             score.append(j)
                         for k in reviews:
@@ -829,11 +848,13 @@ if __name__ == '__main__':
 
                     total_food['store'] = store
                     total_food['kind'] = kind
-                    total_food['score'] = score
-                    total_food['review'] = review
                     total_food['lat'] = lat
                     total_food['lng'] = lng
                     total_food['url'] = url
+                    total_food['score'] = score
+                    total_food['review'] = review
+
+                    st.dataframe(total_food)
 
                     total_food["ko_review"] = total_food["review"].apply(lambda x: text_clearing(x))
                     del total_food['review']
@@ -843,7 +864,7 @@ if __name__ == '__main__':
                     predict_food = total_food
                     # ----
                     pre_score = []
-                    for i in range(len(predict_food)):
+                    for i in tqdm(range(len(predict_food))):
                         k = score_predict(predict_food["ko_review"][i])
                         pre_score.append(k)
                     predict_food['pre_score'] = pre_score
@@ -866,9 +887,13 @@ if __name__ == '__main__':
 
                     store_unique['store'] = unique_li
 
-                    good_feature_temp = list(good_word.objects.values_list('word', flat=True))
+                    cursor.execute("Select word From content_good_word")
 
-                    bad_feature_temp = list(bad_word.objects.values_list('word', flat=True))
+                    good_feature_temp = [item[0] for item in cursor.fetchall()]
+
+                    cursor.execute("Select word From content_bad_word")
+
+                    bad_feature_temp = [item[0] for item in cursor.fetchall()]
 
                     total_list = pd.DataFrame(columns=['Store', 'Review', 'Score', 'lat', 'lng'])
                     score_li = []
