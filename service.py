@@ -247,7 +247,7 @@ if __name__ == '__main__':
             <br/>
         """
 
-    st.title('신촌에서 뭐 먹지?')
+    st.title('맛집 찾기 프로그램')
 
     with st.container():
         st.header("1. 데이터 크롤링 및 초기 설정")
