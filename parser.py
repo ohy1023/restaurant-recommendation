@@ -72,11 +72,12 @@ def overlapped_data(keyword, start_x, start_y, next_x, next_y, num_x, num_y):
 
 # 이태원 126.99 37.53
 # 신촌 126.93 37.55
+# 천안 야우리 127.1478 36.8124
 
 if __name__=='__main__':
     keyword = '음식점'
-    start_x = 126.93
-    start_y = 37.55
+    start_x = 127.1478
+    start_y = 36.8124
     next_x = 0.01
     next_y = 0.01
     num_x = 2
