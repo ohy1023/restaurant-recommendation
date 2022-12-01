@@ -933,7 +933,7 @@ if __name__ == '__main__':
                     st.dataframe(result.style.highlight_max('Total Score'))
 
                     m = folium.Map(
-                        location=[37.5598, 126.9425],
+                        location=[36.8197, 127.1544],
                         zoom_start=15
                     )
                     folium.Marker([user_y, user_x], tooltip='현위치').add_to(m)
