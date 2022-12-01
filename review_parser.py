@@ -17,7 +17,8 @@ from content.models import restaurant_review, restaurant_info
 
 
 def read_csv():
-    df = pd.read_csv('신촌 리뷰 최종.csv', encoding='utf8')
+    # df = pd.read_csv('신촌 리뷰 최종.csv', encoding='utf8')
+    df = pd.read_csv('야우리 리뷰 최종.csv', encoding='utf8')
     # df = pd.read_csv('이태원 리뷰 최종.csv', encoding='utf8')
     df = df.drop(['Unnamed: 0'], axis=1)
 

@@ -65,7 +65,6 @@ def whole_region(keyword, start_x, start_y, end_x, end_y):
         params = {'query': keyword, 'page': page_num,
                   'rect': f'{start_x},{start_y},{end_x},{end_y}'}
         headers = {"Authorization": KAKAO_API_KEY}
-        ## 입력예시 -->> headers = {"Authorization": "KakaoAK f64acbasdfasdfasf70e4f52f737760657"}
         resp = requests.get(url, params=params, headers=headers)
 
         search_count = resp.json()['meta']['total_count']
@@ -770,8 +769,10 @@ if __name__ == '__main__':
                     df2.reset_index(drop=True, inplace=True)
 
                     # 신촌역 좌표
-                    point = 37.5598, 126.9425  # 위도 경도
-                    G = ox.graph_from_point(point, network_type='drive', dist=1500)
+                    # point = 37.5598, 126.9425  # 위도 경도
+                    # 천안 종합 터미널 좌표
+                    point = 36.8197, 127.1548  # 위도 경도
+                    G = ox.graph_from_point(point, network_type='drive', dist=5500)
 
                     # 요청 받아야하는 값 : 사용자 위치
                     # user_y, user_x = get_my_place_google()  # 경도, 위도
