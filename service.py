@@ -31,7 +31,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import warnings
 
-
 warnings.filterwarnings('ignore')
 import django
 
@@ -297,7 +296,6 @@ if __name__ == '__main__':
                 options.add_argument("--disable-features=VizDisplayCompositor")
 
                 driver = webdriver.Chrome(options=options, service_log_path='selenium.log')
-
 
                 info = pd.DataFrame(columns=['종류', '별점', '리뷰 개수', '오픈 시간', '마감 시간', '해시 태그', '리뷰'])
 
@@ -576,8 +574,10 @@ if __name__ == '__main__':
 
                 train_data, test_data = train_test_split(total_food, stratify=total_food['y'], random_state=25)
                 train_data['review'] = train_data['review'].str.replace("[^ㄱ-ㅎㅏ-ㅣ가-힣 ]", "")
+
                 stopwords = ['의', '가', '이', '은', '들', '는', '좀', '잘', '걍', '과', '도', '를', '으로', '자', '에', '와', '한', '하다']
                 okt = Okt()
+
                 # 훈련 데이터 토큰화
                 X_train = []
                 for sentence in tqdm(train_data['review']):
@@ -585,6 +585,7 @@ if __name__ == '__main__':
                     stopwords_removed_sentence = [word for word in tokenized_sentence if
                                                   not word in stopwords]  # 불용어 제거
                     X_train.append(stopwords_removed_sentence)
+
                 # 테스트 데이터 토큰화
                 X_test = []
                 for sentence in tqdm(test_data['review']):
@@ -592,6 +593,7 @@ if __name__ == '__main__':
                     stopwords_removed_sentence = [word for word in tokenized_sentence if
                                                   not word in stopwords]  # 불용어 제거
                     X_test.append(stopwords_removed_sentence)
+
                 tokenizer = Tokenizer()
                 tokenizer.fit_on_texts(X_train)
                 threshold = 3
@@ -599,6 +601,7 @@ if __name__ == '__main__':
                 rare_cnt = 0  # 등장 빈도수가 threshold보다 작은 단어의 개수를 카운트
                 total_freq = 0  # 훈련 데이터의 전체 단어 빈도수 총 합
                 rare_freq = 0  # 등장 빈도수가 threshold보다 작은 단어의 등장 빈도수의 총 합
+
                 # 단어와 빈도수의 쌍(pair)을 key와 value로 받는다.
                 for key, value in tokenizer.word_counts.items():
                     total_freq = total_freq + value
@@ -607,6 +610,7 @@ if __name__ == '__main__':
                     if (value < threshold):
                         rare_cnt = rare_cnt + 1
                         rare_freq = rare_freq + value
+
                 # 전체 단어 개수 중 빈도수 2이하인 단어는 제거.
                 # 0번 패딩 토큰을 고려하여 + 1
                 vocab_size = total_cnt - rare_cnt + 1
@@ -617,17 +621,21 @@ if __name__ == '__main__':
                 y_train = np.array(train_data['y'])
                 y_test = np.array(test_data['y'])
                 drop_train = [index for index, sentence in enumerate(X_train) if len(sentence) < 1]
+
                 # 빈 샘플들을 제거
                 X_train = np.delete(X_train, drop_train, axis=0)
                 y_train = np.delete(y_train, drop_train, axis=0)
                 max_len = 30
                 below_threshold_len(max_len, X_train)
+
                 X_train = pad_sequences(X_train, maxlen=max_len)
                 X_test = pad_sequences(X_test, maxlen=max_len)
+
                 X_train = np.asarray(X_train).astype(np.int)
                 X_test = np.asarray(X_train).astype(np.int)
                 y_train = np.asarray(y_train).astype(np.int)
                 y_test = np.asarray(y_train).astype(np.int)
+
                 embedding_dim = 100
                 hidden_units = 128
                 model = Sequential()
@@ -718,6 +726,7 @@ if __name__ == '__main__':
                         if (value < threshold):
                             rare_cnt = rare_cnt + 1
                             rare_freq = rare_freq + value
+
                     # 전체 단어 개수 중 빈도수 2이하인 단어는 제거.
                     # 0번 패딩 토큰을 고려하여 + 1
                     vocab_size = total_cnt - rare_cnt + 1
@@ -728,6 +737,7 @@ if __name__ == '__main__':
                     y_train = np.array(train_data['y'])
                     y_test = np.array(test_data['y'])
                     drop_train = [index for index, sentence in enumerate(X_train) if len(sentence) < 1]
+
                     # 빈 샘플들을 제거
                     X_train = np.delete(X_train, drop_train, axis=0)
                     y_train = np.delete(y_train, drop_train, axis=0)
