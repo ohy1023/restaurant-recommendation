@@ -44,7 +44,7 @@ https://ohy1023-chatbot-restaurant-recommendation-service-m6tmie.streamlit.app/
 
 ### 감성분류
 
- 문서 또는 문장을 긍정 / 부정으로 나누는 이진 분류에 해당하는 감성 분석을 사용하였습니다. LSTM을 사용한 이유는 RNN Sequence으로 사용할 경우 긍정 / 부정 판단에 누적 학습에 왜곡 현상이 발생하여 판단 오류가 생기는 Vanishing 현상이 발생할 수 박에 없었고, 이를 예방하고자 LSTM(Long Short Term Memory)를 사용하였습니다.
+ 문서 또는 문장을 긍정 / 부정으로 나누는 이진 분류에 해당하는 감성 분석을 사용하였습니다. LSTM을 사용한 이유는 RNN Sequence으로 사용할 경우 긍정 / 부정 판단에 누적 학습에 왜곡 현상이 발생하여 판단 오류가 생기는 Vanishing 현상이 발생할 수 밖에 없었고, 이를 예방하고자 LSTM(Long Short Term Memory)를 사용하였습니다.
 
 ### 맛집 추천
 
