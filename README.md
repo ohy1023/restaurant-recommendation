@@ -57,7 +57,4 @@ DB에서 선정된 음식점들의 리뷰를 가져와  DB에 저장된 감성 �
 ### 3️⃣ 기대효과
 
  학습을 통한 예측을 기반 추천 시스템을 통해서 시간적 효율성과 한눈에 보기 쉬운 비교 분석을 할 수 있습니다. 또한, 서버를 통하여 지역을 확대해나갈 수 있는 확장성을 염두에 두고 개발을 진행하여 원하는 지역을 간단하게 추가 작업할 수 있는 방안으로 제작되었습니다.
-
-✔️ 내용 : [신촌에서 뭐 먹지? (notion.so)](https://www.notion.so/e9abe8ef8c8042658c73c7faf4c2555a)
-
-✔️ 코드 보기 : [https://github.com/ohy1023/chatbot-restaurant-recommendation](https://github.com/ohy1023/chatbot-restaurant-recommendation)
+ 
