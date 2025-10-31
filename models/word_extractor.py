@@ -24,16 +24,19 @@ class WordExtractor:
         X = self.tfidf_transformer.fit_transform(X)
 
         # LogisticRegression 하이퍼파라미터 튜닝
-        params = {
-            'penalty': ['l1', 'l2', 'elasticnet', 'none'],
-            'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000]
-        }
+        params = [
+            {'penalty': ['l2'], 'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100], 'solver': ['lbfgs']},
+            {'penalty': ['l1'], 'C': [0.01, 0.1, 1, 10], 'solver': ['liblinear']},
+            {'penalty': ['elasticnet'], 'C': [0.1, 1, 10], 'solver': ['saga'], 'l1_ratio': [0.5]},
+            {'penalty': ['none'], 'solver': ['lbfgs']},
+        ]
 
         kfold = KFold(n_splits=10, shuffle=True, random_state=1)
         grid_clf = GridSearchCV(
             LogisticRegression(max_iter=1000),
             param_grid=params,
             scoring='f1',
+            # scoring='f1_macro',
             cv=kfold
         )
         grid_clf.fit(X, labels)
