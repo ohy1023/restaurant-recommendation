@@ -16,7 +16,7 @@ from data.crawler import (
 from data.preprocessor import (
     create_review_dataframe, label_reviews,
     filter_valid_scores, clean_reviews, tokenize_reviews,
-    build_vocabulary, remove_empty_samples, prepare_restaurant_data
+    build_vocabulary, remove_empty_samples
 )
 from models.word_extractor import WordExtractor
 from models.sentiment_analyzer import SentimentAnalyzer
@@ -117,18 +117,13 @@ def section_crawling():
                 # DataFrame으로 변환
                 df = pd.DataFrame(reviews)
 
-                st.dataframe(df)
-
-                # DataFrame 전처리
-                total_food = prepare_restaurant_data(df)
-
-                print("test2")
                 # 레이블링
-                sample = filter_valid_scores(total_food)
+                sample = filter_valid_scores(df)
                 sample = label_reviews(sample)
                 sample = clean_reviews(sample)
 
-                print("test3")
+                st.dataframe(sample)
+
                 # 단어 추출
                 extractor = WordExtractor()
                 extractor.fit(sample['ko_review'].tolist(), sample['y'].tolist())
@@ -197,11 +192,10 @@ def section_core_logic():
                     # 데이터 로드
                     conn = init_connection()
                     reviews = get_all_reviews(conn)
-                    scores = get_all_scores(conn)
                     conn.close()
 
                     # 데이터 준비
-                    df = create_review_dataframe(reviews, scores)
+                    df = create_review_dataframe(reviews)
                     df = label_reviews(df)
 
                     # 학습/테스트 분리

@@ -31,8 +31,7 @@ from .preprocessor import (
     clean_reviews,
     tokenize_reviews,
     build_vocabulary,
-    remove_empty_samples,
-    prepare_restaurant_data
+    remove_empty_samples
 )
 
 __all__ = [
@@ -63,6 +62,5 @@ __all__ = [
     'clean_reviews',
     'tokenize_reviews',
     'build_vocabulary',
-    'remove_empty_samples',
-    'prepare_restaurant_data'
+    'remove_empty_samples'
 ]
