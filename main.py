@@ -279,8 +279,7 @@ def section_recommendation():
 
                             # 데이터 로드 및 학습
                             reviews = get_all_reviews(conn)
-                            scores = get_all_scores(conn)
-                            df = create_review_dataframe(reviews, scores)
+                            df = create_review_dataframe(reviews)
                             df = label_reviews(df)
 
                             train_data, test_data = train_test_split(
