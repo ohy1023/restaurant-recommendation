@@ -5,9 +5,11 @@
 ## 사용 환경
 Python 3.7
 
-Mysql 8
+Mysql 8.0.33
 
 Streamlit 1.15.1
+
+pip 23.2.1
 
 ## End Point
 https://ohy1023-chatbot-restaurant-recommendation-service-m6tmie.streamlit.app/
@@ -19,14 +21,13 @@ https://ohy1023-chatbot-restaurant-recommendation-service-m6tmie.streamlit.app/
 ### 2. 식당 리뷰 크롤링
 ![image](/image/restaurant_review.png)
 ### 3. 긍정/부정 단어 분류
-
+![image](image/positive.png)
 ### 4. OSMnx를 이용한 거리 계산
 ![image](https://user-images.githubusercontent.com/110380812/204121602-166b6d6f-a62c-43eb-9bdd-6c208ed3b335.png)
-
 ### 5. LSTM을 이용한 감성 분류
 ![image](https://user-images.githubusercontent.com/110380812/204121614-6612e3ad-7bd2-481b-a2b0-c6c0491e6ac2.png)
-
 ### 6. 식당 추천
+![img.png](image/restaurant_recommendation.png)
 
 ## 1️⃣ 프로젝트 취지 및 목적
 
