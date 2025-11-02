@@ -13,11 +13,20 @@ Streamlit 1.15.1
 https://ohy1023-chatbot-restaurant-recommendation-service-m6tmie.streamlit.app/
 
 ## 실행 화면
-![image](https://user-images.githubusercontent.com/110380812/204121588-fae2d5ee-8cdf-4b69-902c-82a74a96e0a9.png)
-![image](https://user-images.githubusercontent.com/110380812/204121602-166b6d6f-a62c-43eb-9bdd-6c208ed3b335.png)
-![image](https://user-images.githubusercontent.com/110380812/204121614-6612e3ad-7bd2-481b-a2b0-c6c0491e6ac2.png)
-![image](https://user-images.githubusercontent.com/110380812/204121620-0043424a-82bd-48e1-8b60-486711eb77b8.png)
 
+### 1. 식당 정보 크롤링
+![image](/image/restaurant_info.png)
+### 2. 식당 리뷰 크롤링
+![image](/image/restaurant_review.png)
+### 3. 긍정/부정 단어 분류
+
+### 4. OSMnx를 이용한 거리 계산
+![image](https://user-images.githubusercontent.com/110380812/204121602-166b6d6f-a62c-43eb-9bdd-6c208ed3b335.png)
+
+### 5. LSTM을 이용한 감성 분류
+![image](https://user-images.githubusercontent.com/110380812/204121614-6612e3ad-7bd2-481b-a2b0-c6c0491e6ac2.png)
+
+### 6. 식당 추천
 
 ## 1️⃣ 프로젝트 취지 및 목적
 

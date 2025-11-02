@@ -22,6 +22,7 @@ from .crawler import (
     overlapped_data,
     remove_duplicates,
     setup_chrome_driver,
+    scroll_reviews,
     scrape_restaurant_review
 )
 from .preprocessor import (
@@ -54,6 +55,7 @@ __all__ = [
     'whole_region',
     'overlapped_data',
     'setup_chrome_driver',
+    'scroll_reviews',
     'scrape_restaurant_review',
     # preprocessor
     'create_review_dataframe',

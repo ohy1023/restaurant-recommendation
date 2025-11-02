@@ -1,10 +1,12 @@
 import requests
-import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from config.settings import KAKAO_API_KEY, CHROME_OPTIONS
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import time
 
 
 def whole_region(keyword, start_x, start_y, end_x, end_y):
@@ -76,16 +78,54 @@ def remove_duplicates(data_list):
             unique_list.append(d)
     return unique_list
 
-
 def setup_chrome_driver():
-    """Chrome 드라이버 설정"""
+    """성능 최적화된 Chrome 드라이버"""
     options = Options()
+
+    # 기본 옵션
     for option in CHROME_OPTIONS:
         options.add_argument(option)
+
+    # 성능 최적화 옵션
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,  # 이미지 비활성화
+        "profile.default_content_setting_values.notifications": 2,
+        "profile.default_content_setting_values.media_stream": 2,
+    }
+    options.add_experimental_option("prefs", prefs)
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_argument('--disable-dev-shm-usage')
+    options.page_load_strategy = 'eager'  # DOM 로드 후 바로 진행
+
     return webdriver.Chrome(options=options, service_log_path='selenium.log')
 
+# def scroll_reviews(driver, max_reviews):
+#     """최적화된 무한 스크롤"""
+#     scroll_pause = 0.5  # 1.5초 → 0.5초로 단축
+#     last_height = 0
+#     no_change_count = 0
+#
+#     while no_change_count < 3:
+#         elements = driver.find_elements(By.CSS_SELECTOR, "div.group_review ul li")
+#         current_count = len(elements)
+#
+#         if current_count >= max_reviews:
+#             break
+#
+#         # 페이지 끝까지 스크롤 (더 빠름)
+#         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+#         time.sleep(scroll_pause)
+#
+#         # 높이 변화 체크
+#         new_height = driver.execute_script("return document.body.scrollHeight")
+#         if new_height == last_height:
+#             no_change_count += 1
+#         else:
+#             no_change_count = 0
+#         last_height = new_height
+
 def scroll_reviews(driver, max_reviews):
-    """무한 스크롤로 리뷰 더 로딩"""
+    """무한 스크롤로 리뷰 로딩"""
     scroll_pause = 1.5
     scroll_count = 0
     max_scrolls = 50  # 안전 장치
@@ -120,13 +160,23 @@ def scrape_restaurant_review(driver, place_url, max_reviews=500):
     """음식점 리뷰 크롤링"""
     review_url = f"{place_url}#review"
     driver.get(review_url)
-    time.sleep(3)
+
+    # 명시적 대기 사용 (최대 5초)
+    wait = WebDriverWait(driver, 5)
+
+    try:
+        # 리뷰 섹션이 로드될 때까지 대기
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.group_review")))
+    except TimeoutException:
+        return []
 
     # 총 후기 수 가져오기
     try:
-        total_review_elem = driver.find_element(
-            By.CSS_SELECTOR,
-            "#mainContent > div.top_basic > div.info_main > div:nth-child(2) > div:nth-child(2) > a > span.info_num"
+        total_review_elem = wait.until(
+            EC.presence_of_element_located((
+                By.CSS_SELECTOR,
+                "#mainContent > div.top_basic > div.info_main > div:nth-child(2) > div:nth-child(2) > a > span.info_num"
+            ))
         )
         total_reviews = int(total_review_elem.text.replace(",", "").strip())
     except:
@@ -135,34 +185,32 @@ def scrape_restaurant_review(driver, place_url, max_reviews=500):
     if total_reviews == 0:
         return []
 
-    # 실제 크롤링할 최대 리뷰 개수 설정
     actual_max = min(max_reviews, total_reviews)
 
-    # 무한 스크롤
+    # 최적화된 스크롤
     scroll_reviews(driver, actual_max)
 
-    # 리뷰 요소 가져오기
+    # 리뷰 일괄 수집
     all_elements = driver.find_elements(By.CSS_SELECTOR, "div.group_review ul li")
     reviews = []
 
-    for elem in all_elements:
-        if len(reviews) >= actual_max:
-            break
-
-        # 리뷰 내용
+    for elem in all_elements[:actual_max]:
         try:
             content_elem = elem.find_element(By.CSS_SELECTOR, "div.wrap_review p")
+
+            # "더보기" 버튼 처리 최적화
             try:
                 btn_more = content_elem.find_element(By.CSS_SELECTOR, "span.btn_more")
                 if btn_more.is_displayed():
                     driver.execute_script("arguments[0].click();", btn_more)
-                    time.sleep(0.2)
+                    time.sleep(0.05)  # 0.2초 → 0.05초로 단축
             except NoSuchElementException:
                 pass
 
             content = content_elem.text.replace("접기", "").replace("\n", " ").strip()
             if not content:
                 continue
+
         except:
             continue
 

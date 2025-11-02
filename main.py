@@ -2,13 +2,15 @@ import streamlit as st
 import pandas as pd
 from streamlit_folium import folium_static
 from sklearn.model_selection import train_test_split
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 로컬 모듈 import
 from config.settings import STOPWORDS
 from data.database import (
     init_connection, init_db, insert_restaurant_info,
     insert_restaurant_review, insert_good_words, insert_bad_words,
-    get_all_reviews, get_all_scores, get_all_restaurant_info
+    get_all_reviews, get_all_restaurant_info
 )
 from data.crawler import (
     overlapped_data, setup_chrome_driver, scrape_restaurant_review
@@ -16,7 +18,7 @@ from data.crawler import (
 from data.preprocessor import (
     create_review_dataframe, label_reviews,
     filter_valid_scores, clean_reviews, tokenize_reviews,
-    build_vocabulary, remove_empty_samples
+    remove_empty_samples
 )
 from models.word_extractor import WordExtractor
 from models.sentiment_analyzer import SentimentAnalyzer
@@ -37,6 +39,49 @@ if 'sentiment_analyzer' not in st.session_state:
     st.session_state.sentiment_analyzer = None
 if 'distance_calculator' not in st.session_state:
     st.session_state.distance_calculator = None
+
+def crawl_single_restaurant(info, driver):
+    """단일 레스토랑 크롤링"""
+    restaurant_id = info['id']
+    url = info['url']
+
+    try:
+        reviews = scrape_restaurant_review(driver, url)
+
+        # 각 리뷰에 restaurant_id 추가
+        for review in reviews:
+            review['restaurant_id'] = restaurant_id
+
+        return {
+            'success': True,
+            'restaurant_id': restaurant_id,
+            'url': url,
+            'reviews': reviews,
+            'count': len(reviews)
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'restaurant_id': restaurant_id,
+            'url': url,
+            'error': str(e),
+            'count': 0
+        }
+
+
+def crawl_worker(info_batch, worker_id):
+    """워커 스레드 함수"""
+    driver = setup_chrome_driver()
+    results = []
+
+    try:
+        for info in info_batch:
+            result = crawl_single_restaurant(info, driver)
+            results.append(result)
+    finally:
+        driver.quit()
+
+    return results
 
 
 def section_crawling():
@@ -68,41 +113,113 @@ def section_crawling():
     st.markdown("---")
 
     # 리뷰 크롤링
-    if st.button("리뷰 크롤링"):
+    if st.button("리뷰 크롤링 후 DB에 넣기"):
         with st.spinner('리뷰 크롤링 중입니다... 많은 시간이 소요될 수 있습니다'):
             try:
+                start_time = time.time()
+
+                # DB에서 식당 정보 가져오기
                 conn = init_connection()
                 info_list = get_all_restaurant_info(conn)
                 conn.close()
 
-                driver = setup_chrome_driver()
+                total_restaurants = len(info_list)
+                num_workers = 5  # 고정 5개
 
-                results = []
+                st.write(f"총 {total_restaurants}개 식당 크롤링 시작...")
+                st.write(f"워커 수: {num_workers}개")
 
-                for info in info_list:
-                    restaurant_id = info['id']
-                    url = info['url']
+                # 각 워커에 배분할 작업 나누기
+                batch_size = (total_restaurants + num_workers - 1) // num_workers
+                info_batches = [
+                    info_list[i:i + batch_size]
+                    for i in range(0, total_restaurants, batch_size)
+                ]
 
-                    # 각 음식점 리뷰 크롤링
-                    reviews = scrape_restaurant_review(driver, url)
+                all_results = []
 
-                    # 각 리뷰에 restaurant_id 추가
-                    for review in reviews:
-                        review['restaurant_id'] = restaurant_id
-                        results.append(review)
+                # 멀티스레드 실행
+                with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                    # 각 워커에 작업 제출
+                    future_to_worker = {
+                        executor.submit(crawl_worker, batch, idx): idx
+                        for idx, batch in enumerate(info_batches)
+                    }
 
-                driver.quit()
+                    # 완료된 작업 처리
+                    for future in as_completed(future_to_worker):
+                        worker_id = future_to_worker[future]
 
-                result_df = pd.DataFrame(results)
-                st.dataframe(result_df)
+                        try:
+                            worker_results = future.result()
+                            all_results.extend(worker_results)
+                            st.write(f"워커 {worker_id + 1} 완료!")
+
+                        except Exception as e:
+                            st.error(f"워커 {worker_id} 오류: {str(e)}")
+
+                # 결과 정리
+                successful_results = [r for r in all_results if r['success']]
+                failed_results = [r for r in all_results if not r['success']]
+
+                # 모든 리뷰 수집
+                all_reviews = []
+                for result in successful_results:
+                    all_reviews.extend(result['reviews'])
+
+                # DataFrame 생성
+                if all_reviews:
+                    result_df = pd.DataFrame(all_reviews)
+                    st.dataframe(result_df, use_container_width=True)
+
+                # 결과 표시
                 st.success("리뷰 크롤링 완료!")
 
-                conn = init_connection()
-                insert_restaurant_review(conn, results)
-                conn.close()
-                st.success("크롤링된 리뷰 정보가 DB에 저장되었습니다!")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("성공", len(successful_results))
+                with col2:
+                    st.metric("실패", len(failed_results))
+                with col3:
+                    st.metric("총 리뷰 수", len(all_reviews))
+
+                # 실패한 항목 표시
+                if failed_results:
+                    with st.expander("실패한 항목"):
+                        for fail in failed_results:
+                            st.write(f"- {fail['url']}: {fail['error']}")
+
+                # DB 저장
+                if all_reviews:
+                    conn = init_connection()
+                    insert_restaurant_review(conn, all_reviews)
+                    conn.close()
+                    st.success("크롤링된 리뷰 정보가 DB에 저장되었습니다!")
+
+                # 총 소요 시간
+                end_time = time.time()
+                total_time = end_time - start_time
+
+                hours = int(total_time // 3600)
+                minutes = int((total_time % 3600) // 60)
+                seconds = int(total_time % 60)
+
+                st.write("---")
+                if hours > 0:
+                    st.info(f"총 소요 시간: {hours}시간 {minutes}분 {seconds}초")
+                elif minutes > 0:
+                    st.info(f"총 소요 시간: {minutes}분 {seconds}초")
+                else:
+                    st.info(f"총 소요 시간: {seconds}초")
+
+                # 성능 비교
+                avg_time_per_restaurant = total_time / total_restaurants
+                st.write(f"평균 처리 시간: {avg_time_per_restaurant:.2f}초/식당")
+
             except Exception as e:
                 st.error(f"오류 발생: {str(e)}")
+                import traceback
+                st.code(traceback.format_exc())
 
     st.markdown("---")
 
@@ -121,8 +238,6 @@ def section_crawling():
                 sample = filter_valid_scores(df)
                 sample = label_reviews(sample)
                 sample = clean_reviews(sample)
-
-                st.dataframe(sample)
 
                 # 단어 추출
                 extractor = WordExtractor()

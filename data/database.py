@@ -67,7 +67,7 @@ def insert_restaurant_review(conn, restaurant_data):
 
 def insert_good_words(conn, words):
     """긍정 단어 DB 대량 삽입"""
-    sql = "INSERT INTO content_good_word (word) VALUES (%s)"
+    sql = "INSERT IGNORE INTO content_good_word (word) VALUES (%s)"
     cursor = conn.cursor()
     try:
         values = [(word,) for word in words]  # 튜플 형태로 변환
@@ -79,7 +79,7 @@ def insert_good_words(conn, words):
 
 def insert_bad_words(conn, words):
     """부정 단어 DB 대량 삽입"""
-    sql = "INSERT INTO content_bad_word (word) VALUES (%s)"
+    sql = "INSERT IGNORE INTO content_bad_word (word) VALUES (%s)"
     cursor = conn.cursor()
     try:
         values = [(word,) for word in words]
